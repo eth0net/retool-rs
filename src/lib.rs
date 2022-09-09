@@ -1,24 +1,15 @@
-use std::{
-    fs::{read_to_string, File},
-    io::Write,
-};
+use std::{fs, io::Write};
 
-pub fn convert_file(input_path: &str, output_path: &str) {
-    let input_data = match read_to_string(input_path) {
-        Ok(data) => data,
-        Err(error) => panic!("Failed to read input data: {}", error),
-    };
-
-    let mut output_file = match File::create(output_path) {
-        Ok(file) => file,
-        Err(error) => panic!("Failed to create output file: {}", error),
-    };
+pub fn convert_file(input_path: &str, output_path: &str) -> Result<()> {
+    let input_data = fs::read_to_string(input_path)?;
 
     // todo: parse and convert data here
 
     let output_data = input_data;
 
-    if let Err(error) = output_file.write_all(output_data.as_bytes()) {
-        panic!("Failed to write output file: {}", error)
-    };
+    fs::File::create(output_path)?.write_all(output_data.as_bytes())?;
+
+    Ok(())
 }
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
