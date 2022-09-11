@@ -6,19 +6,24 @@ use std::{
 
 use json::JsonValue;
 
+/// Convert a JSON file containing an array of 5e.tools entries to the Reroll equivalent.
+/// Any resulting data will writen to a JSON file created at the output path.
 pub fn convert_file(kind: &str, input_path: &str, output_path: &str) -> Result<()> {
     Converter::new(kind)?.convert_file(input_path, output_path)
 }
 
+/// Convert serialised JSON array of 5e.tools entries to the Reroll equivalent.
 pub fn convert_string(kind: &str, input: &str) -> Result<String> {
     Converter::new(kind)?.convert_string(input)
 }
 
+/// Convert a JsonValue array of 5e.tools entries to the Reroll equivalent.
 pub fn convert_json(kind: &str, input: JsonValue) -> Result<JsonValue> {
     Converter::new(kind)?.convert_json(input)
 }
 
-trait Convert {
+/// Common methods and contract definition for Converter.
+pub trait Convert {
     fn convert_file(&self, input_path: &str, output_path: &str) -> Result<()> {
         let input_data = fs::read_to_string(input_path)?;
 
@@ -40,11 +45,13 @@ trait Convert {
     fn convert_json(&self, input: JsonValue) -> Result<JsonValue>;
 }
 
+/// Converters to process 5e.tools data into Reroll data.
 pub enum Converter {
     Dummy,
 }
 
 impl Converter {
+    /// Create a new Converter of type 'kind'.
     pub fn new(kind: &str) -> Result<Converter> {
         match kind {
             "dummy" => Ok(Converter::Dummy),
@@ -61,6 +68,7 @@ impl Convert for Converter {
     }
 }
 
+/// Internal implementation of Converter::Dummy.
 struct DummyConverter {}
 
 impl DummyConverter {
