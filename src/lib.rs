@@ -42,7 +42,7 @@ impl Converter {
 
         let output_json = self.convert_json(input_json)?;
 
-        Ok(output_json.pretty(2))
+        Ok(output_json.pretty(4))
     }
 
     pub fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
