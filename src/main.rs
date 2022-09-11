@@ -4,7 +4,7 @@ fn main() -> retool::Result<()> {
     let output_path = "./data/output/backgrounds.json";
 
     let kind = match data_kind {
-        "dummy" => retool::ConverterKind::Dummy,
+        "dummy" => retool::Converter::Dummy,
         _ => panic!("Unknown kind: {}", data_kind),
     };
 
