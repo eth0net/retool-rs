@@ -91,3 +91,61 @@ impl From<json::Error> for Error {
         Error::JsonError(error)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{env, path::PathBuf};
+
+    use json::object;
+
+    use super::*;
+
+    #[test]
+    fn dummy_convert_file() {
+        let mut input_path_buf = PathBuf::from(file!());
+        input_path_buf.pop();
+        input_path_buf.push("testdata/dummy.json");
+        let input_path = input_path_buf.to_str().expect("input_path_buf.to_str ok");
+
+        let mut output_path_buf = env::temp_dir();
+        output_path_buf.push("dummy.json");
+        let output_path = output_path_buf.to_str().expect("output_path_buf.to_str ok");
+
+        Converter::Dummy
+            .convert_file(input_path, output_path)
+            .expect("Converter::Dummy.convert_file ok");
+
+        let input_data = fs::read_to_string(input_path).expect("read input file");
+        let output_data = fs::read_to_string(output_path).expect("read output file");
+
+        assert_eq!(input_data, output_data);
+
+        convert_file(Converter::Dummy, input_path, output_path).expect("convert_file ok");
+
+        let input_data = fs::read_to_string(input_path).expect("read input file");
+        let output_data = fs::read_to_string(output_path).expect("read output file");
+        assert_eq!(input_data, output_data);
+    }
+
+    #[test]
+    fn dummy_convert_string() {
+        let input = object! { key: "value" }.pretty(4);
+
+        let output = Converter::Dummy
+            .convert_string(&input)
+            .expect("convert_string ok");
+
+        assert_eq!(input, output);
+    }
+
+    #[test]
+    fn dummy_convert_json() {
+        let input = object! { key: "value" };
+
+        let output = Converter::Dummy
+            .convert_json(input.clone())
+            .expect("convert_json ok");
+
+        assert_eq!(input, output);
+    }
+}
