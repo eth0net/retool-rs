@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 json = "0.12.4"
+nanoid = "0.4.0"
