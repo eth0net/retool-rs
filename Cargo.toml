@@ -2,9 +2,15 @@
 name = "retool"
 version = "0.1.0"
 edition = "2021"
+description = "A tool to convert 5e.tools data for use with Reroll"
+repository = "https://github.com/eth0net/retool-rs"
+license = "MIT"
+keywords = ["5etools", "reroll", "dnd"]
+categories = ["command-line-utilities", "encoding"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = { version = "3.2.20", features = ["derive"] }
 json = "0.12.4"
 nanoid = "0.4.0"

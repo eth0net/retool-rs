@@ -1,43 +1,38 @@
-use std::{env, process};
+use clap::{Parser, ValueEnum};
 
 fn main() -> retool::Result<()> {
-    let args: Vec<String> = env::args().collect();
+    let app = App::parse();
 
-    let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Failed to build config: {}", err);
-        process::exit(1)
-    });
+    let converter = app.kind.converter();
 
-    retool::convert_file(config.converter, &config.input, &config.output)
+    retool::convert_file(converter, &app.input, &app.output)
 }
 
-struct Config {
-    converter: retool::Converter,
+#[derive(Parser)]
+#[clap(version, about, long_about = None)]
+struct App {
+    /// Kind of resource to convert
+    #[clap(arg_enum, value_parser, value_name = "kind")]
+    kind: Kind,
+
+    /// Path to the input JSON file
+    #[clap(value_parser)]
     input: String,
+
+    /// Destination path for output JSON file
+    #[clap(value_parser)]
     output: String,
 }
 
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
+#[derive(Clone, ValueEnum)]
+enum Kind {
+    Dummy,
+}
+
+impl Kind {
+    fn converter(&self) -> retool::Converter {
+        match self {
+            Kind::Dummy => retool::Converter::Dummy,
         }
-
-        let kind = args[1].clone();
-        let input = args[2].clone();
-        let output = args[3].clone();
-
-        let converter = match kind.as_str() {
-            "dummy" => retool::Converter::Dummy,
-            _ => {
-                return Err("unknown kind");
-            }
-        };
-
-        Ok(Config {
-            converter,
-            input,
-            output,
-        })
     }
 }
