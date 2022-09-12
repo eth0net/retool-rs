@@ -5,7 +5,7 @@ fn main() -> retool::Result<()> {
 
     let converter = app.kind.converter();
 
-    retool::convert_file(converter, &app.input, &app.output)
+    retool::convert_file(converter, &app.source, &app.target)
 }
 
 #[derive(Parser)]
@@ -16,12 +16,12 @@ struct App {
     kind: Kind,
 
     /// Path to the input JSON file
-    #[clap(value_parser)]
-    input: String,
+    #[clap(value_parser, value_name = "source")]
+    source: String,
 
     /// Destination path for output JSON file
-    #[clap(value_parser)]
-    output: String,
+    #[clap(value_parser, value_name = "target")]
+    target: String,
 }
 
 #[derive(Clone, ValueEnum)]
