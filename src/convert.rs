@@ -1,4 +1,4 @@
-use std::{fs, io::Write};
+use std::{fs, io::Write, path::PathBuf};
 
 use json::JsonValue;
 
@@ -13,7 +13,7 @@ pub enum Converter {
 /// Implement Converter methods to handle data processing.
 impl Converter {
     /// Convert a JSON file containing an array of 5e.tools entries to the Reroll equivalent.
-    pub fn convert_file(&self, input_path: &str, output_path: &str) -> Result<()> {
+    pub fn convert_file(&self, input_path: &PathBuf, output_path: &PathBuf) -> Result<()> {
         let input_data = fs::read_to_string(input_path)?;
 
         let output_data = self.convert_string(&input_data)?;
@@ -57,10 +57,10 @@ mod tests {
 
     use super::*;
 
-    fn temp_file() -> String {
+    fn temp_file() -> PathBuf {
         let mut path = env::temp_dir();
         path.push(nanoid!());
-        path.to_str().expect("path to str ok").to_string()
+        path
     }
 
     #[test]
@@ -70,15 +70,15 @@ mod tests {
 
         let input_data = object! { data: "dummy" }.pretty(4);
         fs::File::create(&input_path)
-            .expect("input file create ok")
+            .expect("failed to create input file")
             .write_all(input_data.as_bytes())
-            .expect("input file write ok");
+            .expect("failed to write to input file");
 
         Converter::Dummy
             .convert_file(&input_path, &output_path)
-            .expect("convert_file ok");
+            .expect("failed to convert file");
 
-        let output_data = fs::read_to_string(&output_path).expect("output file read ok");
+        let output_data = fs::read_to_string(&output_path).expect("failed to read output file");
         assert_eq!(input_data, output_data);
     }
 
@@ -87,7 +87,7 @@ mod tests {
         let input = object! { data: "dummy" }.pretty(4);
         let output = Converter::Dummy
             .convert_string(&input)
-            .expect("convert_string ok");
+            .expect("failed to convert string");
         assert_eq!(input, output);
     }
 
@@ -96,7 +96,7 @@ mod tests {
         let input = object! { data: "dummy" };
         let output = Converter::Dummy
             .convert_json(input.clone())
-            .expect("convert_json ok");
+            .expect("failed to convert json");
         assert_eq!(input, output);
     }
 }

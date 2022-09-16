@@ -1,4 +1,4 @@
-use std::{fmt, io};
+use std::{error, fmt, io};
 
 use json;
 
@@ -8,6 +8,8 @@ pub enum Error {
     IoError(io::Error),
     JsonError(json::Error),
 }
+
+impl error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

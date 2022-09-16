@@ -1,11 +1,16 @@
+use std::{path::PathBuf, process};
+
 use clap::{Parser, ValueEnum};
 
-fn main() -> retool::Result<()> {
+fn main() {
     let app = App::parse();
 
     let converter = app.kind.converter();
 
-    retool::convert_file(converter, &app.source, &app.target)
+    if let Err(error) = retool::convert_file(converter, &app.source, &app.target) {
+        eprintln!("Retool encountered an error: {}", error);
+        process::exit(1);
+    };
 }
 
 #[derive(Parser)]
@@ -17,11 +22,11 @@ struct App {
 
     /// Path to the input JSON file
     #[clap(value_parser, value_name = "source")]
-    source: String,
+    source: PathBuf,
 
     /// Destination path for output JSON file
     #[clap(value_parser, value_name = "target")]
-    target: String,
+    target: PathBuf,
 }
 
 #[derive(Clone, ValueEnum)]
