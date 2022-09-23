@@ -1,8 +1,7 @@
 use std::{fs, io::Write, path::Path};
 
+use anyhow::Result;
 use json::JsonValue;
-
-use crate::Result;
 
 /// Converters to process 5e.tools data into Reroll data.
 pub enum Converter {
