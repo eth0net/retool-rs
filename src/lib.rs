@@ -4,10 +4,8 @@ use anyhow::Result;
 use json::JsonValue;
 
 mod convert;
-mod error;
 
 pub use convert::Converter;
-pub use error::Error;
 
 /// Convert a JSON file containing an array of 5e.tools entries to the Reroll equivalent.
 pub fn convert_file(conv: Converter, input_path: &Path, output_path: &Path) -> Result<()> {

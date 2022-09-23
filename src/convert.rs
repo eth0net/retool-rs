@@ -1,6 +1,6 @@
 use std::{fs, io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use json::JsonValue;
 
 /// Converters to process 5e.tools data into Reroll data.
@@ -13,20 +13,28 @@ pub enum Converter {
 impl Converter {
     /// Convert a JSON file containing an array of 5e.tools entries to the Reroll equivalent.
     pub fn convert_file(&self, input_path: &Path, output_path: &Path) -> Result<()> {
-        let input_data = fs::read_to_string(input_path)?;
+        let input_data = fs::read_to_string(input_path)
+            .with_context(|| format!("Failed to read input file: {}", input_path.display()))?;
 
-        let output_data = self.convert_string(&input_data)?;
+        let output_data = self
+            .convert_string(&input_data)
+            .with_context(|| format!("Failed to convert string"))?;
 
-        fs::File::create(output_path)?.write_all(output_data.as_bytes())?;
+        fs::File::create(output_path)
+            .with_context(|| format!("Failed to create output file: {}", output_path.display()))?
+            .write_all(output_data.as_bytes())
+            .with_context(|| format!("Failed to write to output file"))?;
 
         Ok(())
     }
 
     /// Convert a serialised JSON array of 5e.tools entries to the Reroll equivalent.
     pub fn convert_string(&self, input: &str) -> Result<String> {
-        let input_json = json::parse(input)?;
+        let input_json = json::parse(input).with_context(|| format!("Failed to parse JSON"))?;
 
-        let output_json = self.convert_json(input_json)?;
+        let output_json = self
+            .convert_json(input_json)
+            .with_context(|| format!("Failed to convert json"))?;
 
         Ok(output_json.pretty(4))
     }
