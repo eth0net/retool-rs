@@ -1,4 +1,4 @@
-use std::{fs, io::Write, path::PathBuf};
+use std::{fs, io::Write, path::Path};
 
 use json::JsonValue;
 
@@ -13,7 +13,7 @@ pub enum Converter {
 /// Implement Converter methods to handle data processing.
 impl Converter {
     /// Convert a JSON file containing an array of 5e.tools entries to the Reroll equivalent.
-    pub fn convert_file(&self, input_path: &PathBuf, output_path: &PathBuf) -> Result<()> {
+    pub fn convert_file(&self, input_path: &Path, output_path: &Path) -> Result<()> {
         let input_data = fs::read_to_string(input_path)?;
 
         let output_data = self.convert_string(&input_data)?;
@@ -50,35 +50,28 @@ impl DummyConverter {
 
 #[cfg(test)]
 mod tests {
-    use std::{env, fs};
+    use std::fs;
 
+    use assert_fs::{prelude::*, NamedTempFile};
     use json::object;
-    use nanoid::nanoid;
 
     use super::*;
 
-    fn temp_file() -> PathBuf {
-        let mut path = env::temp_dir();
-        path.push(nanoid!());
-        path
-    }
-
     #[test]
     fn dummy_convert_file() {
-        let input_path = temp_file();
-        let output_path = temp_file();
+        let input_file = NamedTempFile::new("input.json").expect("create input file");
+        let output_file = NamedTempFile::new("output.json").expect("create output file");
 
         let input_data = object! { data: "dummy" }.pretty(4);
-        fs::File::create(&input_path)
-            .expect("failed to create input file")
-            .write_all(input_data.as_bytes())
-            .expect("failed to write to input file");
+        input_file
+            .write_str(input_data.as_str())
+            .expect("write input data");
 
         Converter::Dummy
-            .convert_file(&input_path, &output_path)
-            .expect("failed to convert file");
+            .convert_file(input_file.path(), output_file.path())
+            .expect("convert file");
 
-        let output_data = fs::read_to_string(&output_path).expect("failed to read output file");
+        let output_data = fs::read_to_string(output_file.path()).expect("read output file");
         assert_eq!(input_data, output_data);
     }
 
@@ -87,7 +80,7 @@ mod tests {
         let input = object! { data: "dummy" }.pretty(4);
         let output = Converter::Dummy
             .convert_string(&input)
-            .expect("failed to convert string");
+            .expect("convert string");
         assert_eq!(input, output);
     }
 
@@ -96,7 +89,7 @@ mod tests {
         let input = object! { data: "dummy" };
         let output = Converter::Dummy
             .convert_json(input.clone())
-            .expect("failed to convert json");
+            .expect("convert json");
         assert_eq!(input, output);
     }
 }
