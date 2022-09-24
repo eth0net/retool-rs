@@ -50,7 +50,7 @@ impl Converter {
 struct DummyConverter;
 
 impl DummyConverter {
-    pub(crate) fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
+    fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
         Ok(input)
     }
 }
