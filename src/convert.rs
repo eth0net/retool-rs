@@ -1,12 +1,14 @@
 use std::{fs, io::Write, path::Path};
 
-use anyhow::{Context, Result};
-use json::JsonValue;
+use anyhow::{bail, Context, Result};
+use json::{array, object, JsonValue};
 
 /// Converters to process 5e.tools data into Reroll data.
 pub enum Converter {
-    /// Dummy converter for testing, simply returns the input data unmodified.
+    /// Converter sample for testing that returns the input data unmodified.
     Dummy,
+    /// Converter to process feats from 5e.tools into Reroll data.
+    Feat,
 }
 
 /// Implement Converter methods to handle data processing.
@@ -43,17 +45,132 @@ impl Converter {
     pub fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
         match self {
             Converter::Dummy => DummyConverter.convert_json(input),
+            Converter::Feat => FeatConverter.convert_json(input),
         }
     }
 }
 
+trait JsonConverter {
+    fn convert_json(&self, input: JsonValue) -> Result<JsonValue>;
+}
+
 struct DummyConverter;
 
-impl DummyConverter {
+impl JsonConverter for DummyConverter {
     fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
         Ok(input)
     }
 }
+
+struct FeatConverter;
+
+impl JsonConverter for FeatConverter {
+    fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
+        if !input.has_key("feat") {
+            bail!("expected feat array in object: {{ \"feat\": [] }}")
+        };
+
+        let output = input["feat"]
+            .members()
+            .map(|feat| {
+                let mut desc = String::new();
+                desc.push_str(&self.prerequisite_to_string(feat["prerequisite"].clone()));
+
+                object! {
+                    name: feat["name"].clone(),
+                    desc: desc,
+                    skills_count_choose: 0,
+                    skills: array![],
+                }
+            })
+            .collect();
+
+        Ok(JsonValue::Array(output))
+    }
+}
+
+impl FeatConverter {
+    fn prerequisite_to_string(&self, from: JsonValue) -> String {
+        // Prerequisite: Elf or half-elf
+        // Prerequisite: Half-Elf, half-orc, or human
+        // Prerequisite: Dwarf or a Small race
+        // Prerequisite: Charisma 13 or higher
+        // Prerequisite: Intelligence or Wisdom 13 or higher
+        // Prerequisites: 4th level, strixhaven initiate feat
+        // Prerequisite: Proficiency with light armor
+        // Prerequisite: The ability to cast at least one spell
+        // Prerequisite: Spellcasting or Pact Magic feature
+
+        from.members().fold(String::from("Prerequisite: "), |a, i| {
+            let mut r = String::new();
+
+            if !i["ability"].is_empty() {
+                let mut abilities = vec![];
+                let mut level = 0;
+
+                ABILITIES.iter().for_each(|ability| {
+                    if i["ability"].has_key(ability.key) {
+                        abilities.push(ability.value);
+                        if let Some(lvl) = i["ability"][ability.key].as_i32() {
+                            level = lvl
+                        }
+                    }
+                });
+
+                r.push_str(&format!("{} {} or higher", abilities.join(" or "), level))
+            }
+
+            // alignment
+            // background
+            // feat
+            // level
+            //      class
+            // other
+            // proficiency
+            //      armor
+            //      weapon
+            // psionics
+            // race
+            //      subrace
+            // spellcasting
+            // spellcasting2020
+
+            a + &r
+        })
+    }
+}
+
+struct KeyValuePair<'a> {
+    key: &'a str,
+    value: &'a str,
+}
+
+const ABILITIES: [KeyValuePair; 6] = [
+    KeyValuePair {
+        key: "cha",
+        value: "Charisma",
+    },
+    KeyValuePair {
+        key: "con",
+        value: "Constitution",
+    },
+    KeyValuePair {
+        key: "dex",
+        value: "Dexterity",
+    },
+    KeyValuePair {
+        key: "int",
+        value: "Intelligence",
+    },
+    KeyValuePair {
+        key: "str",
+        value: "Strength",
+    },
+    KeyValuePair {
+        key: "wis",
+        value: "Wisdom",
+    },
+];
 
 #[cfg(test)]
 mod tests {
