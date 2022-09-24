@@ -120,6 +120,23 @@ impl FeatConverter {
                 r.push_str(&format!("{} {} or higher", abilities.join(" or "), level))
             }
 
+            if !i["race"].is_empty() {
+                let to_name = |race: &JsonValue| {
+                    let mut name = race["name"].to_string();
+                    if race.has_key("displayEntry") {
+                        name = race["displayEntry"].to_string();
+                    }
+                    if race.has_key("subrace") {
+                        name.push_str(&format!(" ({})", race["subrace"]))
+                    }
+                    name
+                };
+
+                let races: Vec<String> = i["race"].members().map(to_name).collect();
+
+                r.push_str(&races.join(", "))
+            }
+
             // alignment
             // background
             // feat
@@ -130,8 +147,6 @@ impl FeatConverter {
             //      armor
             //      weapon
             // psionics
-            // race
-            //      subrace
             // spellcasting
             // spellcasting2020
 
