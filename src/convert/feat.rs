@@ -96,7 +96,10 @@ impl FeatConverter {
                 let to_strings = |proficiency: &JsonValue| {
                     proficiency
                         .entries()
-                        .map(|(class, kind)| kind.to_string() + class)
+                        .map(|(class, kind)| match class {
+                            "weapon" => format!("a {} {}", kind.to_string(), class),
+                            _ => format!("{} {}", kind.to_string(), class),
+                        })
                         .collect::<Vec<String>>()
                 };
 
