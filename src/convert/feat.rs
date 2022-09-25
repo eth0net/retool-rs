@@ -92,6 +92,40 @@ impl FeatConverter {
                 r.push(races.join(", "))
             }
 
+            if i["proficiency"].is_array() {
+                let to_strings = |proficiency: &JsonValue| {
+                    proficiency
+                        .entries()
+                        .map(|(class, kind)| kind.to_string() + class)
+                        .collect::<Vec<String>>()
+                };
+
+                let join_strings = |mut v: Vec<String>| -> String {
+                    let mut sep = " and ";
+                    let len = v.len();
+                    if len > 2 {
+                        v[len - 1].insert_str(0, "and ");
+                        sep = ", ";
+                    }
+                    v.join(sep)
+                };
+
+                let mut proficiencies = i["proficiency"]
+                    .members()
+                    .map(to_strings)
+                    .map(join_strings)
+                    .collect::<Vec<String>>();
+
+                let mut sep = " or ";
+                let len = proficiencies.len();
+                if len > 2 {
+                    proficiencies[len - 1].insert_str(0, "or ");
+                    sep = ", ";
+                }
+
+                r.push(format!("Proficiency with {}", proficiencies.join(sep)));
+            }
+
             if let Some(spellcasting) = i["spellcasting"].as_bool() {
                 if spellcasting {
                     r.push("The ability to cast at least one spell".to_string())
@@ -110,7 +144,6 @@ impl FeatConverter {
             // level
             //      class
             // other
-            // proficiency
             //      armor
             //      weapon
             // psionics
