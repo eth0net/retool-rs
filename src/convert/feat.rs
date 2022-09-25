@@ -71,25 +71,46 @@ impl FeatConverter {
                 r.push(format!("{} {} or higher", abilities.join(" or "), level))
             }
 
-            if !i["race"].is_empty() {
+            if let JsonValue::Array(races) = &i["race"] {
                 let to_name = |race: &JsonValue| {
-                    let mut name = race["name"].to_string();
-                    if race.has_key("displayEntry") {
-                        name = race["displayEntry"].to_string();
+                    let name = match race["displayEntry"].is_string() {
+                        true => race["displayEntry"].to_string(),
+                        false => race["name"].to_string(),
+                    };
+
+                    match race["subrace"].is_string() {
+                        true => format!("{} ({})", name, race["subrace"]),
+                        false => name,
                     }
-                    if race.has_key("subrace") {
-                        name.push_str(&format!(" ({})", race["subrace"]))
-                    }
-                    name
                 };
 
-                let mut races: Vec<String> = i["race"].members().map(to_name).collect();
+                let to_title = |s: String| -> String {
+                    if s.is_empty() {
+                        return s;
+                    }
+
+                    let (first, rest) = s.split_at(1);
+                    format!(
+                        "{}{}",
+                        first.to_ascii_uppercase(),
+                        rest.to_ascii_lowercase()
+                    )
+                };
+
+                let mut races = races
+                    .iter()
+                    .map(to_name)
+                    .map(to_title)
+                    .collect::<Vec<String>>();
+
+                let mut sep = " or ";
                 let len = races.len();
                 if len > 2 {
                     races[len - 1].insert_str(0, "or ");
+                    sep = ", ";
                 }
 
-                r.push(races.join(", "))
+                r.push(races.join(sep));
             }
 
             if i["proficiency"].is_array() {
@@ -97,8 +118,8 @@ impl FeatConverter {
                     proficiency
                         .entries()
                         .map(|(class, kind)| match class {
-                            "weapon" => format!("a {} {}", kind.to_string(), class),
-                            _ => format!("{} {}", kind.to_string(), class),
+                            "weapon" => format!("a {} {}", kind, class),
+                            _ => format!("{} {}", kind, class),
                         })
                         .collect::<Vec<String>>()
                 };
