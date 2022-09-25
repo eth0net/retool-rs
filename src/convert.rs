@@ -57,38 +57,6 @@ trait JsonConverter {
     fn convert_json(&self, input: JsonValue) -> Result<JsonValue>;
 }
 
-struct KeyValuePair<'a> {
-    key: &'a str,
-    value: &'a str,
-}
-
-const ABILITIES: [KeyValuePair; 6] = [
-    KeyValuePair {
-        key: "cha",
-        value: "Charisma",
-    },
-    KeyValuePair {
-        key: "con",
-        value: "Constitution",
-    },
-    KeyValuePair {
-        key: "dex",
-        value: "Dexterity",
-    },
-    KeyValuePair {
-        key: "int",
-        value: "Intelligence",
-    },
-    KeyValuePair {
-        key: "str",
-        value: "Strength",
-    },
-    KeyValuePair {
-        key: "wis",
-        value: "Wisdom",
-    },
-];
-
 #[cfg(test)]
 mod tests {
     use std::fs;

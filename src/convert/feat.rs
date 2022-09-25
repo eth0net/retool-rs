@@ -43,22 +43,32 @@ impl FeatConverter {
         // Prerequisite: Spellcasting or Pact Magic feature
 
         from.members().fold(String::from("Prerequisite: "), |a, i| {
-            let mut r = String::new();
+            let mut r = vec![];
 
             if !i["ability"].is_empty() {
-                let mut abilities = vec![];
-                let mut level = 0;
+                let (abilities, level) =
+                    i["ability"].members().fold((vec![], 0), |mut acc, member| {
+                        member.entries().fold(&mut acc, |acc, entry| {
+                            // todo: break out this match logic into Option<&str> fn
+                            // then to if let Some(...) and wrap the level mod too
+                            match entry.0 {
+                                "cha" => acc.0.push("Charisma"),
+                                "con" => acc.0.push("Constitution"),
+                                "dex" => acc.0.push("Dexterity"),
+                                "int" => acc.0.push("Intelligence"),
+                                "str" => acc.0.push("Strength"),
+                                "wis" => acc.0.push("Wisdom"),
+                                _ => return acc,
+                            };
+                            if let Some(lvl) = entry.1.as_usize() {
+                                acc.1 = lvl
+                            }
+                            acc
+                        });
+                        acc
+                    });
 
-                ABILITIES.iter().for_each(|ability| {
-                    if i["ability"].has_key(ability.key) {
-                        abilities.push(ability.value);
-                        if let Some(lvl) = i["ability"][ability.key].as_i32() {
-                            level = lvl
-                        }
-                    }
-                });
-
-                r.push_str(&format!("{} {} or higher", abilities.join(" or "), level))
+                r.push(format!("{} {} or higher", abilities.join(" or "), level))
             }
 
             if !i["race"].is_empty() {
@@ -73,9 +83,13 @@ impl FeatConverter {
                     name
                 };
 
-                let races: Vec<String> = i["race"].members().map(to_name).collect();
+                let mut races: Vec<String> = i["race"].members().map(to_name).collect();
+                let len = races.len();
+                if len > 2 {
+                    races[len - 1].insert_str(0, "or ");
+                }
 
-                r.push_str(&races.join(", "))
+                r.push(races.join(", "))
             }
 
             // alignment
@@ -91,7 +105,7 @@ impl FeatConverter {
             // spellcasting
             // spellcasting2020
 
-            a + &r
+            a + &r.join(", ")
         })
     }
 }

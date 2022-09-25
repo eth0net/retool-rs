@@ -32,12 +32,14 @@ struct App {
 #[derive(Clone, ValueEnum)]
 enum Kind {
     Dummy,
+    Feat,
 }
 
 impl Kind {
     fn converter(&self) -> retool::Converter {
         match self {
             Kind::Dummy => retool::Converter::Dummy,
+            Kind::Feat => retool::Converter::Feat,
         }
     }
 }
