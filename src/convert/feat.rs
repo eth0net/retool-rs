@@ -92,6 +92,18 @@ impl FeatConverter {
                 r.push(races.join(", "))
             }
 
+            if let Some(spellcasting) = i["spellcasting"].as_bool() {
+                if spellcasting {
+                    r.push("The ability to cast at least one spell".to_string())
+                }
+            }
+
+            if let Some(spellcasting2020) = i["spellcasting2020"].as_bool() {
+                if spellcasting2020 {
+                    r.push("Spellcasting or Pact Magic feature".to_string())
+                }
+            }
+
             // alignment
             // background
             // feat
@@ -102,8 +114,6 @@ impl FeatConverter {
             //      armor
             //      weapon
             // psionics
-            // spellcasting
-            // spellcasting2020
 
             a + &r.join(", ")
         })
