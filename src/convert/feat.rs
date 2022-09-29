@@ -45,26 +45,24 @@ impl FeatConverter {
         from.members().fold(String::from("Prerequisite: "), |a, i| {
             let mut r = vec![];
 
-            if !i["ability"].is_empty() {
-                let (abilities, level) =
-                    i["ability"].members().fold((vec![], 0), |mut acc, member| {
-                        member.entries().fold(&mut acc, |acc, entry| {
-                            // todo: break out this match logic into Option<&str> fn
-                            // then to if let Some(...) and wrap the level mod too
-                            match entry.0 {
-                                "cha" => acc.0.push("Charisma"),
-                                "con" => acc.0.push("Constitution"),
-                                "dex" => acc.0.push("Dexterity"),
-                                "int" => acc.0.push("Intelligence"),
-                                "str" => acc.0.push("Strength"),
-                                "wis" => acc.0.push("Wisdom"),
-                                _ => return acc,
-                            };
-                            if let Some(lvl) = entry.1.as_usize() {
-                                acc.1 = lvl
-                            }
-                            acc
-                        });
+            if let JsonValue::Array(abilities) = &i["ability"] {
+                let (abilities, level) = abilities
+                    .iter()
+                    .flat_map(|ability| ability.entries())
+                    .map(|ability| match ability.0 {
+                        "cha" => ("Charisma", ability.1),
+                        "con" => ("Constitution", ability.1),
+                        "dex" => ("Dexterity", ability.1),
+                        "int" => ("Intelligence", ability.1),
+                        "str" => ("Strength", ability.1),
+                        "wis" => ("Wisdom", ability.1),
+                        _ => ("Unknown", ability.1),
+                    })
+                    .fold((vec![], 0), |mut acc, ability| {
+                        acc.0.push(ability.0);
+                        if let Some(lvl) = ability.1.as_usize() {
+                            acc.1 = lvl;
+                        }
                         acc
                     });
 
