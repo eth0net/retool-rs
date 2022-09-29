@@ -87,12 +87,23 @@ impl FeatConverter {
                         return s;
                     }
 
-                    let (first, rest) = s.split_at(1);
-                    format!(
-                        "{}{}",
-                        first.to_ascii_uppercase(),
-                        rest.to_ascii_lowercase()
-                    )
+                    let upper_first = |s: &str| {
+                        let (first, rest) = s.split_at(1);
+                        format!(
+                            "{}{}",
+                            first.to_ascii_uppercase(),
+                            rest.to_ascii_lowercase()
+                        )
+                    };
+
+                    s.split_whitespace()
+                        .map(upper_first)
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                        .split('-')
+                        .map(upper_first)
+                        .collect::<Vec<String>>()
+                        .join("-")
                 };
 
                 let mut races = races
