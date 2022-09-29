@@ -45,6 +45,10 @@ impl FeatConverter {
         from.members().fold(String::from("Prerequisite: "), |a, i| {
             let mut r = vec![];
 
+            if let Some(other) = &i["other"].as_str() {
+                r.push(other.to_string());
+            }
+
             if let JsonValue::Array(abilities) = &i["ability"] {
                 let (abilities, level) = abilities
                     .iter()
@@ -174,8 +178,6 @@ impl FeatConverter {
             // alignment
             // background
             // feat
-            // level
-            //      class
             // other
             //      armor
             //      weapon
