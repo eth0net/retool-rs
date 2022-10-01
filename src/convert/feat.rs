@@ -86,12 +86,10 @@ impl FeatConverter {
                     }
                 };
 
-                let to_title = |s: String| -> String {
-                    if s.is_empty() {
-                        return s;
-                    }
+                let mut races = races.iter().map(to_name).collect::<Vec<String>>();
 
-                    let upper_first = |s: &str| {
+                if let Some(race) = races.get(0) {
+                    let to_title = |s: &str| {
                         let (first, rest) = s.split_at(1);
                         format!(
                             "{}{}",
@@ -100,28 +98,21 @@ impl FeatConverter {
                         )
                     };
 
-                    s.split_whitespace()
-                        .map(upper_first)
-                        .collect::<Vec<String>>()
-                        .join(" ")
+                    races[0] = race
                         .split('-')
-                        .map(upper_first)
+                        .map(to_title)
                         .collect::<Vec<String>>()
-                        .join("-")
-                };
-
-                let mut races = races
-                    .iter()
-                    .map(to_name)
-                    .map(to_title)
-                    .collect::<Vec<String>>();
-
-                let mut sep = " or ";
-                let len = races.len();
-                if len > 2 {
-                    races[len - 1].insert_str(0, "or ");
-                    sep = ", ";
+                        .join("-");
                 }
+
+                let len = races.len();
+                let sep = match len > 2 {
+                    true => {
+                        races[len - 1].insert_str(0, "or ");
+                        ", "
+                    }
+                    false => " or ",
+                };
 
                 r.push(races.join(sep));
             }
