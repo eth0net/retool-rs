@@ -45,7 +45,7 @@ impl FeatConverter {
         from.members().fold(String::from("Prerequisite: "), |a, i| {
             let mut r = vec![];
 
-            if let Some(other) = &i["other"].as_str() {
+            if let Some(other) = i["other"].as_str() {
                 r.push(other.to_string());
             }
 
