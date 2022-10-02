@@ -49,6 +49,16 @@ impl FeatConverter {
                 r.push(other.to_string());
             }
 
+            if let Some(level) = i["level"].as_usize() {
+                let suffix = match level % 10 {
+                    1 => "st",
+                    2 => "nd",
+                    3 => "rd",
+                    _ => "th",
+                };
+                r.push(format!("{}{} level", level, suffix));
+            }
+
             if let JsonValue::Array(abilities) = &i["ability"] {
                 let (abilities, level) = abilities
                     .iter()
