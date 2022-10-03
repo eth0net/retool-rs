@@ -34,7 +34,6 @@ impl FeatConverter {
     fn prerequisite_to_string(&self, prerequisites: JsonValue) -> String {
         let prerequisites: Vec<String> = prerequisites
             .members()
-            // todo: sort prerequisites by weight
             .filter_map(|prerequisite| {
                 // alignment
                 // background
@@ -44,23 +43,20 @@ impl FeatConverter {
                 //      weapon
                 // psionics
 
+                // todo: sort prerequisite entries by weight
                 prerequisite
                     .entries()
                     .filter_map(|(k, v)| match k {
                         "note" => None,
                         "level" => {
-                            if let Some(lvl) = v.as_u8() {
-                                let suffix = ordinal_form(lvl);
-                                return Some(format!("{} level", suffix));
-                            }
-                            if let Some(lvl) = v["level"].as_u8() {
-                                let suffix = ordinal_form(lvl);
-                                return Some(format!("{} level", suffix));
-                            }
-                            None
+                            let level_simple = v.as_u8();
+                            let level_object = v["level"].as_u8();
+                            level_simple
+                                .or(level_object)
+                                .map(|l| format!("{} level", ordinal_form(l)))
                         }
                         "race" => {
-                            let mut races = v
+                            let races = v
                                 .members()
                                 .filter_map(|race| {
                                     let display_entry = race["displayEntry"].as_str();
@@ -76,16 +72,7 @@ impl FeatConverter {
                                 })
                                 .collect::<Vec<String>>();
 
-                            let len = races.len();
-                            let sep = match len > 2 {
-                                true => {
-                                    races[len - 1].insert_str(0, "or ");
-                                    ", "
-                                }
-                                false => " or ",
-                            };
-
-                            Some(races.join(sep))
+                            join_conjunct(races, ", ", "or ")
                         }
                         "ability" => {
                             let (abilities, level) = v
@@ -101,60 +88,43 @@ impl FeatConverter {
                                     _ => None,
                                 })
                                 .fold((vec![], 0), |mut acc, (ability, level)| {
-                                    acc.0.push(ability);
+                                    acc.0.push(ability.to_string());
                                     if let Some(lvl) = level.as_usize() {
                                         acc.1 = lvl;
                                     }
                                     acc
                                 });
 
-                            match !abilities.is_empty() {
-                                true => {
-                                    Some(format!("{} {} or higher", abilities.join(" or "), level))
-                                }
-                                false => None,
-                            }
+                            join_conjunct(abilities, ", ", "or ")
+                                .map(|a| format!("{} {} or higher", a, level))
                         }
                         "proficiency" => {
-                            let mut proficiencies = v
+                            let proficiencies = v
                                 .members()
-                                .map(|proficiency| {
-                                    proficiency
+                                .filter_map(|proficiency| {
+                                    let entries = proficiency
                                         .entries()
-                                        .map(|(class, kind)| match class {
-                                            "weapon" => format!("a {} {}", kind, class),
-                                            _ => format!("{} {}", kind, class),
+                                        .filter_map(|(class, kind)| match class {
+                                            "armor" => Some(format!("{} {}", kind, class)),
+                                            "weapon" => Some(format!("a {} {}", kind, class)),
+                                            _ => None,
                                         })
-                                        .collect::<Vec<String>>()
-                                })
-                                .map(|mut v| {
-                                    let mut sep = " and ";
-                                    let len = v.len();
-                                    if len > 2 {
-                                        v[len - 1].insert_str(0, "and ");
-                                        sep = ", ";
-                                    }
-                                    v.join(sep)
+                                        .collect::<Vec<String>>();
+                                    join_conjunct(entries, ", ", "and ")
                                 })
                                 .collect::<Vec<String>>();
 
-                            let mut sep = " or ";
-                            let len = proficiencies.len();
-                            if len > 2 {
-                                proficiencies[len - 1].insert_str(0, "or ");
-                                sep = ", ";
-                            }
-
-                            Some(format!("Proficiency with {}", proficiencies.join(sep)))
+                            join_conjunct(proficiencies, ", ", "or ")
+                                .map(|p| format!("Proficiency with {}", p))
                         }
                         "spellcasting" => match v.as_bool() {
                             Some(true) => {
-                                Some(String::from("The ability to cast at least one spell"))
+                                Some("The ability to cast at least one spell".to_string())
                             }
                             _ => None,
                         },
                         "spellcasting2020" => match v.as_bool() {
-                            Some(true) => Some(String::from("Spellcasting or Pact Magic feature")),
+                            Some(true) => Some("Spellcasting or Pact Magic feature".to_string()),
                             _ => None,
                         },
                         "other" => v.as_str().map(|other| other.to_string()),
@@ -204,4 +174,14 @@ fn title_case(s: &str) -> String {
         .map(to_title)
         .collect::<Vec<String>>()
         .join("-")
+}
+
+fn join_conjunct(v: Vec<String>, s1: &str, s2: &str) -> Option<String> {
+    v.iter()
+        .enumerate()
+        .map(|(i, s)| match i == v.len() - 1 {
+            true => format!("{}{}", s1, s),
+            false => format!("{}{}{}", s1, s2, s),
+        })
+        .reduce(|a, i| format!("{}{}", a, i))
 }
