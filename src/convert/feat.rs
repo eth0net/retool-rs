@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use anyhow::{bail, Result};
 use json::{array, object, JsonValue};
 
@@ -49,11 +51,39 @@ impl FeatConverter {
                     .filter_map(|(k, v)| match k {
                         "note" => None,
                         "level" => {
-                            let level_simple = v.as_u8();
-                            let level_object = v["level"].as_u8();
-                            level_simple
-                                .or(level_object)
-                                .map(|l| format!("{} level", ordinal_form(l)))
+                            if let Some(level) = v.as_u8() {
+                                return Some(format!("{} level", ordinal_form(level)));
+                            };
+
+                            if let JsonValue::Object(level) = v {
+                                let level_string = level["level"]
+                                    .as_u8()
+                                    .map(|l| format!("{} level", ordinal_form(l)));
+
+                                let class_name = level["class"]["name"].as_str();
+                                let subclass_name = level["subclass"]["name"].as_str();
+
+                                let level_visible = level["level"] != 1;
+                                let subclass_visible = level["subclass"]["visible"] == true;
+                                let class_visible =
+                                    level["class"]["visible"] == true || subclass_visible;
+
+                                let class_string: Option<String> = None;
+
+                                if level_string.is_some() && class_string.is_some() {
+                                    return Some(format!(
+                                        "{} {}",
+                                        level_string.unwrap(),
+                                        class_string.unwrap()
+                                    ));
+                                } else if level_string.is_some() {
+                                    return level_string;
+                                } else if class_string.is_some() {
+                                    return class_string;
+                                }
+                            };
+
+                            None
                         }
                         "race" => {
                             let races = v
@@ -138,6 +168,7 @@ impl FeatConverter {
             .collect();
 
         let prefix = match prerequisites.len() {
+            0 => "",
             1 => "Prerequisite: ",
             _ => "Prerequisites: ",
         };
