@@ -1,16 +1,15 @@
-use std::{path::PathBuf, process};
+use std::{fmt::Display, path::PathBuf};
 
+use anyhow::Context;
 use clap::{Parser, ValueEnum};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let app = App::parse();
 
-    let converter = app.kind.converter();
-
-    if let Err(error) = retool::convert_file(converter, &app.source, &app.target) {
-        eprintln!("Retool encountered an error: {}", error);
-        process::exit(1);
-    };
+    app.kind
+        .converter()
+        .convert_file(&app.source, &app.target)
+        .with_context(|| format!("Failed to retool {}", app.kind))
 }
 
 #[derive(Parser)]
@@ -41,5 +40,14 @@ impl Kind {
             Kind::Dummy => retool::Converter::Dummy,
             Kind::Feat => retool::Converter::Feat,
         }
+    }
+}
+
+impl Display for Kind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Kind::Dummy => "dummy",
+            Kind::Feat => "feat",
+        })
     }
 }
