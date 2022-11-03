@@ -178,32 +178,31 @@ mod prerequisite {
         if let Some(level) = v.as_u8() {
             return Some(format!("{} level", ordinal_form(level)));
         };
+
         if let JsonValue::Object(level) = v {
-            let level_string = level["level"]
-                .as_u8()
-                .map(|l| format!("{} level", ordinal_form(l)));
+            let mut stack = vec![];
 
-            let class_name = level["class"]["name"].as_str();
-            let subclass_name = level["subclass"]["name"].as_str();
-
-            let level_visible = level["level"] != 1;
-            let subclass_visible = level["subclass"]["visible"] == true;
-            let class_visible = level["class"]["visible"] == true || subclass_visible;
-
-            let class_string: Option<String> = None;
-
-            if level_string.is_some() && class_string.is_some() {
-                return Some(format!(
-                    "{} {}",
-                    level_string.unwrap(),
-                    class_string.unwrap()
-                ));
-            } else if level_string.is_some() {
-                return level_string;
-            } else if class_string.is_some() {
-                return class_string;
+            if let Some(lvl) = level["level"].as_u8() {
+                if lvl != 1 {
+                    stack.push(format!("{} level", ordinal_form(lvl)))
+                }
             }
+
+            if let Some(class) = level["class"]["name"].as_str() {
+                if level["class"]["visible"] == true {
+                    stack.push(class.to_string());
+                }
+            }
+
+            if let Some(subclass) = level["subclass"]["name"].as_str() {
+                if level["subclass"]["visible"] == true {
+                    stack.push(subclass.to_string())
+                }
+            }
+
+            return Some(stack.join(" "));
         };
+
         None
     }
 }
