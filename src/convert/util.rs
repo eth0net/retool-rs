@@ -31,9 +31,10 @@ pub(crate) fn title_case(s: &str) -> String {
 pub(crate) fn join_conjunct(v: Vec<String>, s1: &str, s2: &str) -> Option<String> {
     v.iter()
         .enumerate()
-        .map(|(i, s)| match i == v.len() - 1 {
-            true => format!("{}{}", s1, s),
-            false => format!("{}{}{}", s1, s2, s),
+        .map(|(i, s)| match i {
+            _ if i == 0 => s.to_string(),
+            _ if i == v.len() - 1 => format!("{}{}{}", s1, s2, s),
+            _ => format!("{}{}", s1, s),
         })
         .reduce(|a, i| format!("{}{}", a, i))
 }
