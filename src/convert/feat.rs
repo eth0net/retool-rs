@@ -35,8 +35,26 @@ mod prerequisite {
 
     use json::JsonValue;
 
+    fn weight(s: &str) -> u8 {
+        match s {
+            "level" => 0,
+            "pact" => 1,
+            "patron" => 2,
+            "spell" => 3,
+            "race" => 4,
+            "ability" => 5,
+            "proficiency" => 6,
+            "spellcasting" => 7,
+            "feature" => 8,
+            "item" => 9,
+            "other" => 10,
+            "otherSummary" => 11,
+            _ => 12,
+        }
+    }
+
     pub(crate) fn to_string(prerequisites: JsonValue) -> String {
-        let prerequisites: Vec<String> = prerequisites
+        let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
                 // alignment
@@ -67,6 +85,7 @@ mod prerequisite {
                     })
             })
             .collect();
+        prerequisites.sort_by_key(|a| weight(a));
 
         let prefix = match prerequisites.len() {
             0 => "",
