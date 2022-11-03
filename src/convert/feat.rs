@@ -31,9 +31,10 @@ impl JsonConverter for FeatConverter {
 }
 
 mod prerequisite {
-    use crate::convert::util::{join_conjunct, ordinal_form, title_case};
+    use crate::convert::util::{join_conjunct, title_case};
 
     use json::JsonValue;
+    use ordinal::Ordinal;
 
     fn weight(s: &str) -> u8 {
         match s {
@@ -176,7 +177,7 @@ mod prerequisite {
 
     fn level_string(v: &JsonValue) -> Option<String> {
         if let Some(level) = v.as_u8() {
-            return Some(format!("{} level", ordinal_form(level)));
+            return Some(format!("{} level", Ordinal(level)));
         };
 
         if let JsonValue::Object(level) = v {
@@ -184,7 +185,7 @@ mod prerequisite {
 
             if let Some(lvl) = level["level"].as_u8() {
                 if lvl != 1 {
-                    stack.push(format!("{} level", ordinal_form(lvl)))
+                    stack.push(format!("{} level", Ordinal(lvl)))
                 }
             }
 

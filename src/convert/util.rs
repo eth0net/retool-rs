@@ -1,17 +1,3 @@
-pub(crate) fn ordinal_form(i: u8) -> String {
-    let m = (i % 10, i % 100);
-    let suffix = if m.0 == 1 && m.1 != 11 {
-        "st"
-    } else if m.0 == 2 && m.1 != 12 {
-        "nd"
-    } else if m.0 == 3 && m.1 != 13 {
-        "rd"
-    } else {
-        "th"
-    };
-    format!("{}{}", i, suffix)
-}
-
 pub(crate) fn title_case(s: &str) -> String {
     let to_title = |s: &str| {
         let (first, rest) = s.split_at(1);
