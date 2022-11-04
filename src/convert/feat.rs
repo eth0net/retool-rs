@@ -66,18 +66,17 @@ mod prerequisite {
                 //      weapon
                 // psionics
 
-                // todo: sort prerequisite entries by weight
                 prerequisite
                     .entries()
                     .filter_map(|(k, v)| match k {
-                        "note" => None,
-                        "level" => level_string(v),
-                        "race" => race_string(v),
                         "ability" => ability_string(v),
+                        "level" => level_string(v),
+                        "note" => None,
+                        "other" => other_to_string(v),
                         "proficiency" => proficiency_string(v),
+                        "race" => race_string(v),
                         "spellcasting" => spellcasting_string(v),
                         "spellcasting2020" => spellcasting2020_string(v),
-                        "other" => other_to_string(v),
                         _ => None,
                     })
                     .reduce(|a, i| match i.contains(" or ") {
@@ -95,42 +94,6 @@ mod prerequisite {
         };
 
         format!("{}{}", prefix, prerequisites.join(", "))
-    }
-
-    fn other_to_string(v: &JsonValue) -> Option<String> {
-        v.as_str().map(|other| other.to_string())
-    }
-
-    fn spellcasting2020_string(v: &JsonValue) -> Option<String> {
-        match v.as_bool() {
-            Some(true) => Some("Spellcasting or Pact Magic feature".to_string()),
-            _ => None,
-        }
-    }
-
-    fn spellcasting_string(v: &JsonValue) -> Option<String> {
-        match v.as_bool() {
-            Some(true) => Some("The ability to cast at least one spell".to_string()),
-            _ => None,
-        }
-    }
-
-    fn proficiency_string(v: &JsonValue) -> Option<String> {
-        let proficiencies = v
-            .members()
-            .filter_map(|proficiency| {
-                let entries = proficiency
-                    .entries()
-                    .filter_map(|(class, kind)| match class {
-                        "armor" => Some(format!("{} {}", kind, class)),
-                        "weapon" => Some(format!("a {} {}", kind, class)),
-                        _ => None,
-                    })
-                    .collect::<Vec<String>>();
-                join_conjunct(entries, ", ", "and ")
-            })
-            .collect::<Vec<String>>();
-        join_conjunct(proficiencies, ", ", "or ").map(|p| format!("Proficiency with {}", p))
     }
 
     fn ability_string(v: &JsonValue) -> Option<String> {
@@ -154,25 +117,6 @@ mod prerequisite {
                 acc
             });
         join_conjunct(abilities, ", ", "or ").map(|a| format!("{} {} or higher", a, level))
-    }
-
-    fn race_string(v: &JsonValue) -> Option<String> {
-        let races = v
-            .members()
-            .filter_map(|race| {
-                let display_entry = race["displayEntry"].as_str();
-                let name = race["name"].as_str();
-                let subrace = race["subrace"].as_str();
-
-                display_entry.or(name).map(|race| (race, subrace))
-            })
-            .map(|(race, subrace)| (title_case(race), subrace))
-            .map(|(race, subrace)| match subrace {
-                Some(subrace) => format!("{} ({})", race, subrace),
-                None => race,
-            })
-            .collect::<Vec<String>>();
-        join_conjunct(races, ", ", "or ")
     }
 
     fn level_string(v: &JsonValue) -> Option<String> {
@@ -205,5 +149,60 @@ mod prerequisite {
         };
 
         None
+    }
+
+    fn other_to_string(v: &JsonValue) -> Option<String> {
+        v.as_str().map(|other| other.to_string())
+    }
+
+    fn proficiency_string(v: &JsonValue) -> Option<String> {
+        let proficiencies = v
+            .members()
+            .filter_map(|proficiency| {
+                let entries = proficiency
+                    .entries()
+                    .filter_map(|(class, kind)| match class {
+                        "armor" => Some(format!("{} {}", kind, class)),
+                        "weapon" => Some(format!("a {} {}", kind, class)),
+                        _ => None,
+                    })
+                    .collect::<Vec<String>>();
+                join_conjunct(entries, ", ", "and ")
+            })
+            .collect::<Vec<String>>();
+        join_conjunct(proficiencies, ", ", "or ").map(|p| format!("Proficiency with {}", p))
+    }
+
+    fn race_string(v: &JsonValue) -> Option<String> {
+        let races = v
+            .members()
+            .filter_map(|race| {
+                let display_entry = race["displayEntry"].as_str();
+                let name = race["name"].as_str();
+                let subrace = race["subrace"].as_str();
+
+                display_entry.or(name).map(|race| (race, subrace))
+            })
+            .map(|(race, subrace)| (title_case(race), subrace))
+            .map(|(race, subrace)| match subrace {
+                Some(subrace) => format!("{} ({})", race, subrace),
+                None => race,
+            })
+            .collect::<Vec<String>>();
+        join_conjunct(races, ", ", "or ")
+    }
+
+    fn spellcasting_string(v: &JsonValue) -> Option<String> {
+        match v.as_bool() {
+            Some(true) => Some("The ability to cast at least one spell".to_string()),
+            _ => None,
+        }
+    }
+
+    fn spellcasting2020_string(v: &JsonValue) -> Option<String> {
+        match v.as_bool() {
+            Some(true) => Some("Spellcasting or Pact Magic feature".to_string()),
+            _ => None,
+        }
     }
 }
