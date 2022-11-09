@@ -120,25 +120,59 @@ mod prerequisite {
     }
 
     fn alignment_string(v: &JsonValue) -> Option<String> {
+        let abv_str = |alignment| match alignment {
+            "L" => Some("lawful"),
+            "C" => Some("chaotic"),
+            "G" => Some("good"),
+            "E" => Some("evil"),
+            "N" => Some("neutral"),
+            "NX" => Some("neutral (law/chaos axis)"),
+            "NY" => Some("neutral (good/evil axis)"),
+            "U" => Some("unaligned"),
+            "A" => Some("any alignment"),
+            _ => None,
+        };
+
         let alignment = v
             .members()
-            .filter_map(|alignment| alignment.as_str())
-            .filter_map(|alignment| match alignment {
-                "L" => Some("lawful"),
-                "C" => Some("chaotic"),
-                "G" => Some("good"),
-                "E" => Some("evil"),
-                "N" => Some("neutral"),
-                "NX" => Some("neutral (law/chaos axis)"),
-                "NY" => Some("neutral (good/evil axis)"),
-                "U" => Some("unaligned"),
-                "A" => Some("any alignment"),
-                _ => None,
-            })
+            .filter_map(|j| j.as_str())
             .collect::<Vec<&str>>();
-        match !alignment.is_empty() {
-            true => Some(alignment.join(", ")),
-            false => None,
+
+        match alignment.len() {
+            1 => abv_str(alignment[0]).map(|a| a.to_string()),
+            2 => {
+                let al = alignment
+                    .iter()
+                    .filter_map(|a| abv_str(*a))
+                    .collect::<Vec<&str>>();
+                match al.is_empty() {
+                    false => Some(al.join(", ")),
+                    true => None,
+                }
+            }
+            3 if alignment.contains(&"NX")
+                && alignment.contains(&"NY")
+                && alignment.contains(&"N") =>
+            {
+                Some("any neutral alignment".to_string())
+            }
+            4 if !alignment.contains(&"L") && !alignment.contains(&"NX") => {
+                Some("any chaotic alignment".to_string())
+            }
+            4 if !alignment.contains(&"C") && !alignment.contains(&"NX") => {
+                Some("any lawful alignment".to_string())
+            }
+            4 if !alignment.contains(&"G") && !alignment.contains(&"NY") => {
+                Some("any evil alignment".to_string())
+            }
+            4 if !alignment.contains(&"E") && !alignment.contains(&"NY") => {
+                Some("any good alignment".to_string())
+            }
+            5 if !alignment.contains(&"L") => Some("any non-lawful alignment".to_string()),
+            5 if !alignment.contains(&"C") => Some("any non-chaotic alignment".to_string()),
+            5 if !alignment.contains(&"G") => Some("any non-good alignment".to_string()),
+            5 if !alignment.contains(&"E") => Some("any non-evil alignment".to_string()),
+            _ => None,
         }
     }
 
