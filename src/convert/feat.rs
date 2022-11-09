@@ -58,7 +58,6 @@ mod prerequisite {
         let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
-                // alignment
                 // background
                 // feat
                 // other
@@ -70,6 +69,7 @@ mod prerequisite {
                     .entries()
                     .filter_map(|(k, v)| match k {
                         "ability" => ability_string(v),
+                        "alignment" => alignment_string(v),
                         "level" => level_string(v),
                         "note" => None,
                         "other" => other_to_string(v),
@@ -117,6 +117,29 @@ mod prerequisite {
                 acc
             });
         join_conjunct(abilities, ", ", "or ").map(|a| format!("{} {} or higher", a, level))
+    }
+
+    fn alignment_string(v: &JsonValue) -> Option<String> {
+        let alignment = v
+            .members()
+            .filter_map(|alignment| alignment.as_str())
+            .filter_map(|alignment| match alignment {
+                "L" => Some("lawful"),
+                "C" => Some("chaotic"),
+                "G" => Some("good"),
+                "E" => Some("evil"),
+                "N" => Some("neutral"),
+                "NX" => Some("neutral (law/chaos axis)"),
+                "NY" => Some("neutral (good/evil axis)"),
+                "U" => Some("unaligned"),
+                "A" => Some("any alignment"),
+                _ => None,
+            })
+            .collect::<Vec<&str>>();
+        match !alignment.is_empty() {
+            true => Some(alignment.join(", ")),
+            false => None,
+        }
     }
 
     fn level_string(v: &JsonValue) -> Option<String> {
