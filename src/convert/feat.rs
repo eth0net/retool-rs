@@ -60,9 +60,6 @@ mod prerequisite {
             .filter_map(|prerequisite| {
                 // background
                 // feat
-                // other
-                //      armor
-                //      weapon
                 // psionics
 
                 prerequisite
