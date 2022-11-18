@@ -61,7 +61,6 @@ mod prerequisite {
         let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
-                // feat
                 // psionics
 
                 prerequisite
@@ -70,6 +69,7 @@ mod prerequisite {
                         "ability" => ability_string(v),
                         "alignment" => alignment_string(v),
                         "background" => background_string(v),
+                        "feat" => feat_string(v),
                         "level" => level_string(v),
                         "note" => None,
                         "other" => other_to_string(v),
@@ -182,6 +182,17 @@ mod prerequisite {
             .filter_map(|background| background["name"].as_str().map(|b| b.to_string()))
             .collect::<Vec<String>>();
         join_conjunct(backgrounds, ", ", "or ")
+    }
+
+    fn feat_string(v: &JsonValue) -> Option<String> {
+        let feats = v
+            .members()
+            .filter_map(|feat| match feat {
+                JsonValue::String(f) => f.split_once('|').map(|(ft, _)| format!("{} feat", ft)),
+                _ => None,
+            })
+            .collect::<Vec<String>>();
+        join_conjunct(feats, ", ", "or ")
     }
 
     fn level_string(v: &JsonValue) -> Option<String> {
