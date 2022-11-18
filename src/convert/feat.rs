@@ -58,7 +58,6 @@ mod prerequisite {
         let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
-                // background
                 // feat
                 // psionics
 
@@ -67,6 +66,7 @@ mod prerequisite {
                     .filter_map(|(k, v)| match k {
                         "ability" => ability_string(v),
                         "alignment" => alignment_string(v),
+                        "background" => background_string(v),
                         "level" => level_string(v),
                         "note" => None,
                         "other" => other_to_string(v),
@@ -171,6 +171,14 @@ mod prerequisite {
             5 if !alignment.contains(&"E") => Some("any non-evil alignment".to_string()),
             _ => None,
         }
+    }
+
+    fn background_string(v: &JsonValue) -> Option<String> {
+        let backgrounds = v
+            .members()
+            .filter_map(|background| background["name"].as_str().map(|b| b.to_string()))
+            .collect::<Vec<String>>();
+        join_conjunct(backgrounds, ", ", "or ")
     }
 
     fn level_string(v: &JsonValue) -> Option<String> {
