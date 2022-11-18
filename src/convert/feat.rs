@@ -15,7 +15,10 @@ impl JsonConverter for FeatConverter {
             .members()
             .map(|feat| {
                 let mut desc = String::new();
-                desc.push_str(&prerequisite::to_string(feat["prerequisite"].clone()));
+
+                if let Some(pr) = prerequisite::to_string(feat["prerequisite"].clone()) {
+                    desc.push_str(pr.as_str())
+                }
 
                 object! {
                     name: feat["name"].clone(),
@@ -54,7 +57,7 @@ mod prerequisite {
         }
     }
 
-    pub(crate) fn to_string(prerequisites: JsonValue) -> String {
+    pub(crate) fn to_string(prerequisites: JsonValue) -> Option<String> {
         let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
@@ -90,7 +93,7 @@ mod prerequisite {
             _ => "Prerequisites: ",
         };
 
-        format!("{}{}", prefix, prerequisites.join(", "))
+        join_conjunct(prerequisites, "; ", "or ").map(|p| format!("{}{}", prefix, p))
     }
 
     fn ability_string(v: &JsonValue) -> Option<String> {
