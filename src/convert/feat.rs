@@ -61,8 +61,6 @@ mod prerequisite {
         let mut prerequisites: Vec<String> = prerequisites
             .members()
             .filter_map(|prerequisite| {
-                // psionics
-
                 prerequisite
                     .entries()
                     .filter_map(|(k, v)| match k {
@@ -74,6 +72,7 @@ mod prerequisite {
                         "note" => None,
                         "other" => other_to_string(v),
                         "proficiency" => proficiency_string(v),
+                        "psionics" => psionics_string(v),
                         "race" => race_string(v),
                         "spellcasting" => spellcasting_string(v),
                         "spellcasting2020" => spellcasting2020_string(v),
@@ -247,6 +246,13 @@ mod prerequisite {
             })
             .collect::<Vec<String>>();
         join_conjunct(proficiencies, ", ", "or ").map(|p| format!("Proficiency with {}", p))
+    }
+
+    fn psionics_string(v: &JsonValue) -> Option<String> {
+        match v.as_bool() {
+            Some(true) => Some("Psionic Talent feature or Wild Talent feat".to_string()),
+            _ => None,
+        }
     }
 
     fn race_string(v: &JsonValue) -> Option<String> {
