@@ -60,9 +60,15 @@ fn list_to_string(list: &JsonValue) -> Option<String> {
         stack.push(name);
     }
 
+    let pfx = match &list["style"].to_string().contains("list-hang") {
+        true => "",
+        false => "- ",
+    };
+
     list["items"]
         .members()
         .filter_map(entry_to_string)
+        .map(|i| format!("{}{}", pfx, i))
         .for_each(|i| stack.push(i));
 
     match stack.is_empty() {
