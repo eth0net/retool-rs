@@ -3,6 +3,7 @@ use json::{array, object, JsonValue};
 
 use super::JsonConverter;
 
+mod entries;
 mod prerequisite;
 
 pub struct FeatConverter;
@@ -22,7 +23,7 @@ impl JsonConverter for FeatConverter {
                     desc_stack.push(pr)
                 }
 
-                if let Some(entries) = join_entries(feat["entries"].clone()) {
+                if let Some(entries) = entries::to_string(feat["entries"].clone()) {
                     desc_stack.push(entries)
                 }
 
@@ -36,19 +37,5 @@ impl JsonConverter for FeatConverter {
             .collect();
 
         Ok(JsonValue::Array(output))
-    }
-}
-
-fn join_entries(entries: JsonValue) -> Option<String> {
-    let entries: Vec<String> = entries
-        .members()
-        .filter_map(|entry| match entry {
-            JsonValue::String(entry) => Some(entry.clone()),
-            _ => None,
-        })
-        .collect();
-    match entries.is_empty() {
-        false => Some(entries.join("\n")),
-        true => None,
     }
 }
