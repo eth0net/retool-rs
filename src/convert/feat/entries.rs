@@ -5,7 +5,7 @@ pub(crate) fn to_string(entries: JsonValue) -> Option<String> {
     let entries: Vec<String> = entries.members().filter_map(entry_to_string).collect();
 
     match entries.is_empty() {
-        false => Some(entries.join("\n")),
+        false => Some(entries.join("\n\n")),
         true => None,
     }
 }

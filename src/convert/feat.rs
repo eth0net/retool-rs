@@ -28,8 +28,8 @@ impl JsonConverter for FeatConverter {
                 }
 
                 object! {
-                    name: feat["name"].clone(),
-                    desc: desc_stack.join("\n"),
+                    name: feat["name"].to_string(),
+                    desc: desc_stack.join("\n\n"),
                     skills_count_choose: 0,
                     skills: array![],
                 }
