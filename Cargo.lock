@@ -509,7 +509,9 @@ dependencies = [
  "clap",
  "comfy-table",
  "json",
+ "lazy_static",
  "ordinal",
+ "regex",
 ]
 
 [[package]]

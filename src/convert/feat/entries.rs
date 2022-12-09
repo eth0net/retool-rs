@@ -1,5 +1,7 @@
 use comfy_table::Table;
 use json::JsonValue;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 pub(crate) fn to_string(entries: JsonValue) -> Option<String> {
     let entries: Vec<String> = entries.members().filter_map(entry_to_string).collect();
@@ -12,8 +14,8 @@ pub(crate) fn to_string(entries: JsonValue) -> Option<String> {
 
 fn entry_to_string(entry: &JsonValue) -> Option<String> {
     match entry {
-        JsonValue::Short(e) => Some(e.to_string()),
-        JsonValue::String(e) => Some(e.to_string()),
+        JsonValue::Short(e) => Some(format_string(e.to_string())),
+        JsonValue::String(e) => Some(format_string(e.to_string())),
         JsonValue::Object(e) => match &e["type"] {
             t if t == "entries" => item_to_string(entry),
             t if t == "item" => item_to_string(entry),
@@ -84,7 +86,7 @@ fn table_to_string(table: &JsonValue) -> Option<String> {
 
     tbl.set_header(table["colLabels"].members());
     table["rows"].members().for_each(|r| {
-        tbl.add_row(r.members());
+        tbl.add_row(r.members().map(|m| m.to_string()).map(format_string));
     });
 
     if let Some(caption) = entry_to_string(&table["caption"]) {
@@ -100,4 +102,17 @@ fn table_to_string(table: &JsonValue) -> Option<String> {
         false => Some(stack.join("\n")),
         true => None,
     }
+}
+
+fn format_string(s: String) -> String {
+    lazy_static! {
+        static ref RE_CHANCE: Regex = Regex::new(r"\{@chance .*?(?P<chance>(?:\w| )+?)\}").unwrap();
+        static ref RE_TAGS: Regex =
+            Regex::new(r"\{@(?:(?:\w| )+?) (?P<value>[a-zA-Z0-9-_',./+ ]+?)(?:\|.*?)?\}").unwrap();
+        static ref RE_NOTE: Regex = Regex::new(r"\{@note (?P<note>.*?)?\}").unwrap();
+    }
+
+    let s = RE_CHANCE.replace_all(&s, "$chance");
+    let s = RE_TAGS.replace_all(&s, "$value");
+    RE_NOTE.replace_all(&s, "$note").to_string()
 }
