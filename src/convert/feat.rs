@@ -5,6 +5,7 @@ use super::JsonConverter;
 
 mod entries;
 mod prerequisite;
+mod skills;
 
 pub struct FeatConverter;
 
@@ -19,6 +20,9 @@ impl JsonConverter for FeatConverter {
             .map(|feat| {
                 let mut desc_stack = vec![];
 
+                let mut skill_list = array![];
+                let mut skill_count = 0;
+
                 if let Some(pr) = prerequisite::to_string(&feat["prerequisite"]) {
                     desc_stack.push(pr)
                 }
@@ -27,11 +31,16 @@ impl JsonConverter for FeatConverter {
                     desc_stack.push(entries)
                 }
 
+                if let Some((l, c)) = skills::parse(&feat["skillProficiencies"][0]) {
+                    skill_list = l;
+                    skill_count = c;
+                }
+
                 object! {
                     name: feat["name"].to_string(),
                     desc: desc_stack.join("\n\n"),
-                    skills_count_choose: 0,
-                    skills: array![],
+                    skills_count_choose: skill_count,
+                    skills: skill_list,
                 }
             })
             .collect();
