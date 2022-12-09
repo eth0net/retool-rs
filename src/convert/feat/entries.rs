@@ -15,7 +15,7 @@ fn entry_to_string(entry: &JsonValue) -> Option<String> {
         JsonValue::Short(e) => Some(e.to_string()),
         JsonValue::String(e) => Some(e.to_string()),
         JsonValue::Object(e) => match &e["type"] {
-            t if t == "entries" => None,
+            t if t == "entries" => item_to_string(entry),
             t if t == "item" => item_to_string(entry),
             t if t == "list" => list_to_string(entry),
             t if t == "section" => None,
