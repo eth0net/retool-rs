@@ -18,7 +18,7 @@ fn entry_to_string(entry: &JsonValue) -> Option<String> {
             t if t == "entries" => item_to_string(entry),
             t if t == "item" => item_to_string(entry),
             t if t == "list" => list_to_string(entry),
-            t if t == "section" => None,
+            t if t == "section" => item_to_string(entry),
             t if t == "table" => table_to_string(entry),
             _ => None,
         },
