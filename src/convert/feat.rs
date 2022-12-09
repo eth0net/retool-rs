@@ -9,7 +9,7 @@ mod prerequisite;
 pub struct FeatConverter;
 
 impl JsonConverter for FeatConverter {
-    fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
+    fn convert_json(&self, input: &JsonValue) -> Result<JsonValue> {
         if !input.has_key("feat") {
             bail!("expected feat array in object: {{ \"feat\": [] }}")
         };
@@ -19,11 +19,11 @@ impl JsonConverter for FeatConverter {
             .map(|feat| {
                 let mut desc_stack = vec![];
 
-                if let Some(pr) = prerequisite::to_string(feat["prerequisite"].clone()) {
+                if let Some(pr) = prerequisite::to_string(&feat["prerequisite"]) {
                     desc_stack.push(pr)
                 }
 
-                if let Some(entries) = entries::to_string(feat["entries"].clone()) {
+                if let Some(entries) = entries::to_string(&feat["entries"]) {
                     desc_stack.push(entries)
                 }
 

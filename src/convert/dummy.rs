@@ -6,7 +6,7 @@ use super::*;
 pub struct DummyConverter;
 
 impl JsonConverter for DummyConverter {
-    fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
-        Ok(input)
+    fn convert_json(&self, input: &JsonValue) -> Result<JsonValue> {
+        Ok(input.clone())
     }
 }

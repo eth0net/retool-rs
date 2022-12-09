@@ -3,7 +3,7 @@ use json::JsonValue;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-pub(crate) fn to_string(entries: JsonValue) -> Option<String> {
+pub(crate) fn to_string(entries: &JsonValue) -> Option<String> {
     let entries: Vec<String> = entries.members().filter_map(entry_to_string).collect();
 
     match entries.is_empty() {

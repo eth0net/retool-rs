@@ -39,14 +39,14 @@ impl Converter {
         let input_json = json::parse(input).with_context(|| "Failed to parse JSON")?;
 
         let output_json = self
-            .convert_json(input_json)
+            .convert_json(&input_json)
             .with_context(|| "Failed to convert json")?;
 
         Ok(output_json.pretty(4))
     }
 
     /// Convert a JsonValue array of 5e.tools entries to the Reroll equivalent.
-    pub fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
+    pub fn convert_json(&self, input: &JsonValue) -> Result<JsonValue> {
         match self {
             Converter::Dummy => dummy::DummyConverter.convert_json(input),
             Converter::Feat => feat::FeatConverter.convert_json(input),
@@ -55,7 +55,7 @@ impl Converter {
 }
 
 trait JsonConverter {
-    fn convert_json(&self, input: JsonValue) -> Result<JsonValue>;
+    fn convert_json(&self, input: &JsonValue) -> Result<JsonValue>;
 }
 
 #[cfg(test)]
@@ -97,9 +97,7 @@ mod tests {
     #[test]
     fn dummy_convert_json() {
         let input = object! { data: "dummy" };
-        let output = Converter::Dummy
-            .convert_json(input.clone())
-            .expect("convert json");
+        let output = Converter::Dummy.convert_json(&input).expect("convert json");
         assert_eq!(input, output);
     }
 }

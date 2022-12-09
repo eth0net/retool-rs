@@ -21,7 +21,7 @@ fn weight(s: &str) -> u8 {
     }
 }
 
-pub(crate) fn to_string(prerequisites: JsonValue) -> Option<String> {
+pub(crate) fn to_string(prerequisites: &JsonValue) -> Option<String> {
     let mut prerequisites: Vec<String> = prerequisites
         .members()
         .filter_map(|prerequisite| {
