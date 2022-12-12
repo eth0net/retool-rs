@@ -12,7 +12,7 @@
 
 Convert [5e.tools](https://5e.tools) data for use with [Reroll](https://reroll.co).
 
-:construction: **WIP** :construction:
+:construction: **Work in Progress** :construction:
 
 | Resource   | Status |
 | :--------- | :----: |
@@ -20,5 +20,5 @@ Convert [5e.tools](https://5e.tools) data for use with [Reroll](https://reroll.c
 | Race       | :x: |
 | Class      | :x: |
 | Subclass   | :x: |
-| Feat       | :construction: |
+| Feat       | :rocket: |
 | Spell      | :x: |

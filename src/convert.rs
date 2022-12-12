@@ -3,10 +3,16 @@ use std::{fs, io::Write, path::Path};
 use anyhow::{Context, Result};
 use json::JsonValue;
 
+mod dummy;
+mod feat;
+mod util;
+
 /// Converters to process 5e.tools data into Reroll data.
 pub enum Converter {
-    /// Dummy converter for testing, simply returns the input data unmodified.
+    /// Converter sample for testing that returns the input data unmodified.
     Dummy,
+    /// Converter to process feats from 5e.tools into Reroll data.
+    Feat,
 }
 
 /// Implement Converter methods to handle data processing.
@@ -33,26 +39,23 @@ impl Converter {
         let input_json = json::parse(input).with_context(|| "Failed to parse JSON")?;
 
         let output_json = self
-            .convert_json(input_json)
+            .convert_json(&input_json)
             .with_context(|| "Failed to convert json")?;
 
         Ok(output_json.pretty(4))
     }
 
     /// Convert a JsonValue array of 5e.tools entries to the Reroll equivalent.
-    pub fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
+    pub fn convert_json(&self, input: &JsonValue) -> Result<JsonValue> {
         match self {
-            Converter::Dummy => DummyConverter.convert_json(input),
+            Converter::Dummy => dummy::DummyConverter.convert_json(input),
+            Converter::Feat => feat::FeatConverter.convert_json(input),
         }
     }
 }
 
-struct DummyConverter;
-
-impl DummyConverter {
-    fn convert_json(&self, input: JsonValue) -> Result<JsonValue> {
-        Ok(input)
-    }
+trait JsonConverter {
+    fn convert_json(&self, input: &JsonValue) -> Result<JsonValue>;
 }
 
 #[cfg(test)]
@@ -94,9 +97,7 @@ mod tests {
     #[test]
     fn dummy_convert_json() {
         let input = object! { data: "dummy" };
-        let output = Converter::Dummy
-            .convert_json(input.clone())
-            .expect("convert json");
+        let output = Converter::Dummy.convert_json(&input).expect("convert json");
         assert_eq!(input, output);
     }
 }
