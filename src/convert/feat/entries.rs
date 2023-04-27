@@ -116,3 +116,19 @@ fn format_string(s: String) -> String {
     let s = RE_TAGS.replace_all(&s, "$value");
     RE_NOTE.replace_all(&s, "$note").to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use test_case::test_case;
+
+    #[test_case("{@chance 1|1 pct}", "1 pct" ; "chance")]
+    #[test_case("{@note some text}", "some text" ; "note with text")]
+    #[test_case("{@note {@tag some text}}", "some text" ; "note with tag")]
+    #[test_case("{@tag some text}", "some text" ; "tag without data")]
+    #[test_case("{@tag some text|data|k=v}", "some text" ; "tag with data")]
+    fn format_string_tests(original: &str, expected: &str) {
+        assert_eq!(format_string(original.to_string()), expected)
+    }
+}
