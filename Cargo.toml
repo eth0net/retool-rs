@@ -16,6 +16,7 @@ json = "0.12.4"
 lazy_static = "1.4.0"
 ordinal = "0.3.2"
 regex = "1.7.0"
+test-case = "3.1.0"
 
 [dev-dependencies]
 assert_fs = "1.0.7"

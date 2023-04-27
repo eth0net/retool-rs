@@ -5,6 +5,7 @@ use json::JsonValue;
 
 mod dummy;
 mod feat;
+mod race;
 mod util;
 
 /// Converters to process 5e.tools data into Reroll data.
