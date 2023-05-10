@@ -1,9 +1,9 @@
 use anyhow::{bail, Result};
 use json::{array, object, JsonValue};
 
+use super::entries;
 use super::JsonConverter;
 
-mod entries;
 mod prerequisite;
 mod skills;
 

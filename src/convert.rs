@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use json::JsonValue;
 
 mod dummy;
+mod entries;
 mod feat;
 mod race;
 mod util;
