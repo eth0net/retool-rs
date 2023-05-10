@@ -502,7 +502,7 @@ dependencies = [
 
 [[package]]
 name = "retool"
-version = "0.2.1"
+version = "0.3.0-alpha.1+races"
 dependencies = [
  "anyhow",
  "assert_fs",
