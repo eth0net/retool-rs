@@ -1,9 +1,9 @@
 use anyhow::{bail, Result};
-use json::{array, object, JsonValue};
+use json::{object, JsonValue};
 
 use super::JsonConverter;
 
-mod abilities {}
+mod abilities;
 
 pub struct RaceConverter;
 
@@ -15,50 +15,22 @@ impl JsonConverter for RaceConverter {
 
         let output = input["race"]
             .members()
-            .map(|race| {
-                let mut ability_bonuses = array![0, 0, 0, 0, 0, 0];
-                let mut flex_ability_bonuses = array![];
+            .flat_map(|race| {
+                let (ability_bonuses, ability_choices) = abilities::parse(&race["ability"]);
 
-                race["ability"].entries().for_each(|(k, v)| {
-                    let index = match k {
-                        "str" => 0,
-                        "dex" => 1,
-                        "con" => 2,
-                        "int" => 3,
-                        "wis" => 4,
-                        "cha" => 5,
-                        "choose" => {
-                            let count = v["count"].as_i8().unwrap_or(0);
-                            let amount = v["amount"].as_i8().unwrap_or(1);
-                            for _ in 0..count {
-                                flex_ability_bonuses.push(amount).unwrap();
-                            }
-                            return;
+                // todo: implement traits
+
+                ability_choices
+                    .iter()
+                    .map(|ability_choice| {
+                        object! {
+                            name: format!("{} ({})", race["name"], race["source"]),
+                            speed: race["speed"]["walk"].as_number().unwrap(),
+                            ability_bonuses: ability_bonuses.clone(),
+                            flex_ability_bonuses: ability_choice.clone(),
                         }
-                        _ => {
-                            println!("unknown ability: {}", k);
-                            return;
-                        }
-                    };
-
-                    ability_bonuses[index] = v.clone();
-                });
-
-                // todo: implement lineage
-                match &race["lineage"] {
-                    t if t == "UA1" => {}
-                    t if t == "VRGR" => {}
-                    _ => {}
-                }
-
-                // todo: implement entries
-
-                object! {
-                    name: format!("{} ({})", race["name"], race["source"]),
-                    speed: race["speed"]["walk"].as_number().unwrap(),
-                    ability_bonuses: ability_bonuses,
-                    flex_ability_bonuses: flex_ability_bonuses,
-                }
+                    })
+                    .collect::<Vec<JsonValue>>()
             })
             .collect();
 
@@ -70,6 +42,7 @@ impl JsonConverter for RaceConverter {
 mod tests {
     use super::*;
 
+    use json::array;
     use test_case::test_case;
 
     #[test_case(object! {
@@ -81,7 +54,7 @@ mod tests {
         name: "Name 1 (Source 1)",
         speed: 10,
         ability_bonuses: [1, 2, 0, 0, 0, 0],
-        flex_ability_bonuses: [],
+        flex_ability_bonuses: null,
     } ; "str and dex only")]
     #[test_case(object! {
         name: "Name 2",
@@ -93,7 +66,7 @@ mod tests {
         name: "Name 2 (Source 2)".to_string(),
         speed: 20,
         ability_bonuses: [0, 0, 3, 0, 0, 6],
-        flex_ability_bonuses: [],
+        flex_ability_bonuses: null,
     } ; "con and cha only")]
     #[test_case(object! {
         name: "Name 3",
@@ -105,7 +78,7 @@ mod tests {
         name: "Name 3 (Source 3)".to_string(),
         speed: 30,
         ability_bonuses: [0, 0, 0, 4, 5, 0],
-        flex_ability_bonuses: [],
+        flex_ability_bonuses: null,
     } ; "int and wis only")]
     #[test_case(object! {
         name: "Name 4",
