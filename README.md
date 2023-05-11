@@ -17,7 +17,7 @@ Convert [5e.tools](https://5e.tools) data for use with [Reroll](https://reroll.c
 | Resource   | Status |
 | :--------- | :----: |
 | Background | :x: |
-| Race       | :x: |
+| Race       | :construction: |
 | Class      | :x: |
 | Subclass   | :x: |
 | Feat       | :rocket: |
