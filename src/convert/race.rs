@@ -4,6 +4,8 @@ use json::{object, JsonValue};
 use super::JsonConverter;
 
 mod abilities;
+mod name;
+mod speed;
 mod traits;
 
 pub struct RaceConverter;
@@ -20,23 +22,13 @@ impl JsonConverter for RaceConverter {
                 let (ability_bonuses, ability_choices) = abilities::parse(race);
                 let add_suffix = ability_choices.len() > 1;
 
-                let speed = match race["speed"] {
-                    JsonValue::Number(speed) => speed,
-                    JsonValue::Object(ref speed) => speed["walk"].as_number().unwrap(),
-                    _ => return vec![],
-                };
-
                 ability_choices
                     .iter()
                     .enumerate()
                     .map(|(idx, ability_choice)| {
-                        let name = match add_suffix {
-                            true => format!("{} {} ({})", race["name"], idx + 2, race["source"]),
-                            false => format!("{} ({})", race["name"], race["source"]),
-                        };
                         object! {
-                            name: name,
-                            speed: speed,
+                            name: name::parse(race, idx, add_suffix),
+                            speed: speed::to_string(race),
                             ability_bonuses: ability_bonuses.clone(),
                             flex_ability_bonuses: ability_choice.clone(),
                             traits: traits::parse(&race["entries"]),
@@ -61,7 +53,7 @@ mod tests {
         name: "Name 1",
         source: "Source 1",
         speed: { walk: 10 },
-        ability: { str: 1, dex: 2 },
+        ability: [{ str: 1, dex: 2 }],
         entries: [],
     }, object! {
         name: "Name 1 (Source 1)",
@@ -74,7 +66,7 @@ mod tests {
         name: "Name 2",
         source: "Source 2",
         speed: { walk: 20 },
-        ability: { con: 3, cha: 6 },
+        ability: [{ con: 3, cha: 6 }],
         entries: [],
     },
     object! {
@@ -88,7 +80,7 @@ mod tests {
         name: "Name 3",
         source: "Source 3",
         speed: { walk: 30 },
-        ability: { int: 4, wis: 5 },
+        ability: [{ int: 4, wis: 5 }],
         entries: [],
     },
     object! {
@@ -102,7 +94,7 @@ mod tests {
         name: "Name 4",
         source: "Source 4",
         speed: { walk: 40 },
-        ability: { choose: { count: 1 }},
+        ability: [{ choose: { count: 1 }}],
         entries: [],
     },
     object! {
@@ -116,7 +108,7 @@ mod tests {
         name: "Name 5",
         source: "Source 5",
         speed: { walk: 50 },
-        ability: { choose: { count: 2 }},
+        ability: [{ choose: { count: 2 }}],
         entries: [],
     },
     object! {
@@ -130,7 +122,7 @@ mod tests {
         name: "Name 6",
         source: "Source 6",
         speed: { walk: 60 },
-        ability: { choose: { count: 1, amount: 2 }},
+        ability: [{ choose: { count: 1, amount: 2 }}],
         entries: [],
     },
     object! {

@@ -23,11 +23,6 @@ fn entry_to_string(entry: &JsonValue) -> Option<String> {
             t if t == "section" => item_to_string(entry),
             t if t == "table" => table_to_string(entry),
             t if t == "itemSpell" => item_to_string(entry),
-            // {
-            //   "type": "itemSpell",
-            //   "name": "At will:",
-            //   "entry": "{@spell nondetection} (self only)"
-            // },
             _ => None,
         },
         JsonValue::Array(_) => {
