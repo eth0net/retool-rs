@@ -17,14 +17,26 @@ impl JsonConverter for RaceConverter {
         let output = input["race"]
             .members()
             .flat_map(|race| {
-                let (ability_bonuses, ability_choices) = abilities::parse(&race["ability"]);
+                let (ability_bonuses, ability_choices) = abilities::parse(race);
+                let add_suffix = ability_choices.len() > 1;
+
+                let speed = match race["speed"] {
+                    JsonValue::Number(speed) => speed,
+                    JsonValue::Object(ref speed) => speed["walk"].as_number().unwrap(),
+                    _ => return vec![],
+                };
 
                 ability_choices
                     .iter()
-                    .map(|ability_choice| {
+                    .enumerate()
+                    .map(|(idx, ability_choice)| {
+                        let name = match add_suffix {
+                            true => format!("{} {} ({})", race["name"], idx + 2, race["source"]),
+                            false => format!("{} ({})", race["name"], race["source"]),
+                        };
                         object! {
-                            name: format!("{} ({})", race["name"], race["source"]),
-                            speed: race["speed"]["walk"].as_number().unwrap(),
+                            name: name,
+                            speed: speed,
                             ability_bonuses: ability_bonuses.clone(),
                             flex_ability_bonuses: ability_choice.clone(),
                             traits: traits::parse(&race["entries"]),

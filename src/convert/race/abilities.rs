@@ -2,11 +2,11 @@ use json::array;
 
 use json::JsonValue;
 
-pub(crate) fn parse(abilities: &JsonValue) -> (JsonValue, Vec<JsonValue>) {
+pub(crate) fn parse(race: &JsonValue) -> (JsonValue, Vec<JsonValue>) {
     let mut ability_bonuses = array![0, 0, 0, 0, 0, 0];
     let mut ability_choices = vec![];
 
-    abilities
+    race["ability"][0]
         .entries()
         .for_each(|(ability_key, ability_value)| {
             let index = match ability_key {
@@ -34,6 +34,17 @@ pub(crate) fn parse(abilities: &JsonValue) -> (JsonValue, Vec<JsonValue>) {
 
             ability_bonuses[index] = ability_value.clone();
         });
+
+    match &race["lineage"] {
+        t if t == "VRGR" => {
+            ability_choices.push(array![2, 1]);
+            ability_choices.push(array![1, 1, 1]);
+        }
+        t if t == "UA1" => {
+            ability_choices.push(array![2, 1]);
+        }
+        _ => {}
+    }
 
     if ability_choices.is_empty() {
         ability_choices.push(JsonValue::Null);
