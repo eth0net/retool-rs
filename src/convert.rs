@@ -15,6 +15,8 @@ pub enum Converter {
     Dummy,
     /// Converter to process feats from 5e.tools into Reroll data.
     Feat,
+    /// Converter to process races from 5e.tools into Reroll data.
+    Race,
 }
 
 /// Implement Converter methods to handle data processing.
@@ -52,6 +54,7 @@ impl Converter {
         match self {
             Converter::Dummy => dummy::DummyConverter.convert_json(input),
             Converter::Feat => feat::FeatConverter.convert_json(input),
+            Converter::Race => race::RaceConverter.convert_json(input),
         }
     }
 }

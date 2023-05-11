@@ -32,6 +32,7 @@ struct App {
 enum Kind {
     Dummy,
     Feat,
+    Race,
 }
 
 impl Kind {
@@ -39,6 +40,7 @@ impl Kind {
         match self {
             Kind::Dummy => retool::Converter::Dummy,
             Kind::Feat => retool::Converter::Feat,
+            Kind::Race => retool::Converter::Race,
         }
     }
 }
@@ -48,6 +50,7 @@ impl Display for Kind {
         f.write_str(match self {
             Kind::Dummy => "dummy",
             Kind::Feat => "feat",
+            Kind::Race => "race",
         })
     }
 }
