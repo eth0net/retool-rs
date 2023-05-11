@@ -52,3 +52,55 @@ pub(crate) fn parse(race: &JsonValue) -> (JsonValue, Vec<JsonValue>) {
 
     (ability_bonuses, ability_choices)
 }
+
+#[cfg(test)]
+mod tests {
+    use json::object;
+    use test_case::test_case;
+
+    use super::*;
+
+    #[test_case(
+        object!{ ability: [{ str: 1, dex: 2}] },
+        (array![1, 2, 0, 0, 0, 0], vec![JsonValue::Null])
+        ; "str and dex only"
+    )]
+    #[test_case(
+        object!{ ability: [{ con: 3, cha: 4}] },
+        (array![0, 0, 3, 0, 0, 4], vec![JsonValue::Null])
+        ; "con and cha only"
+    )]
+    #[test_case(
+        object!{ ability: [{ int: 5, wis: 6}] },
+        (array![0, 0, 0, 5, 6, 0], vec![JsonValue::Null])
+        ; "int and wis only"
+    )]
+    #[test_case(
+        object!{ ability: [{ choose: { count: 1 }}]},
+        (array![0, 0, 0, 0, 0, 0], vec![array![1]])
+        ; "choose 1"
+    )]
+    #[test_case(
+        object!{ ability: [{ choose: { count: 2 }}]},
+        (array![0, 0, 0, 0, 0, 0], vec![array![1,1]])
+        ; "choose 2"
+    )]
+    #[test_case(
+        object!{ ability: [{ choose: { count: 1, amount: 2 }}]},
+        (array![0, 0, 0, 0, 0, 0], vec![array![2]])
+        ; "choose 1 amount 2"
+    )]
+    #[test_case(
+        object!{ ability: [{ str: 1, dex: 2 }], lineage: "VRGR" },
+        (array![1, 2, 0, 0, 0, 0], vec![array![2,1], array![1,1,1]])
+        ; "lineage VRGR"
+    )]
+    #[test_case(
+        object!{ ability: [{ con: 3, cha: 4 }], lineage: "UA1" },
+        (array![0, 0, 3, 0, 0, 4], vec![array![2,1]])
+        ; "lineage UA1"
+    )]
+    fn test_parse(input: JsonValue, expected: (JsonValue, Vec<JsonValue>)) {
+        assert_eq!(parse(&input), expected);
+    }
+}
