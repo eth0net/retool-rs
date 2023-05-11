@@ -28,7 +28,7 @@ impl JsonConverter for RaceConverter {
                     .map(|(idx, ability_choice)| {
                         object! {
                             name: name::parse(race, idx, add_suffix),
-                            speed: speed::to_string(race),
+                            speed: speed::parse(race),
                             ability_bonuses: ability_bonuses.clone(),
                             flex_ability_bonuses: ability_choice.clone(),
                             traits: traits::parse(&race["entries"]),
