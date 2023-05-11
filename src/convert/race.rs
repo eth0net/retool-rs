@@ -16,36 +16,48 @@ impl JsonConverter for RaceConverter {
             bail!("expected race array in object: {{ \"race\": [] }}")
         };
 
-        let output = input["race"]
+        let races = input["race"]
             .members()
-            .filter_map(|race| {
-                if race["traitTags"].contains("NPC Race") {
-                    return None;
-                }
-
-                let (ability_bonuses, ability_choices) = abilities::parse(race);
-                let add_suffix = ability_choices.len() > 1;
-
-                let res = ability_choices
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, ability_choice)| {
-                        object! {
-                            name: name::parse(race, idx, add_suffix),
-                            speed: speed::parse(race),
-                            ability_bonuses: ability_bonuses.clone(),
-                            flex_ability_bonuses: ability_choice.clone(),
-                            traits: traits::parse(&race["entries"]),
-                        }
-                    })
-                    .collect::<Vec<JsonValue>>();
-                Some(res)
-            })
+            .filter_map(map_races)
             .flatten()
             .collect();
 
-        Ok(JsonValue::Array(output))
+        Ok(JsonValue::Array(races))
     }
+}
+
+fn map_races(race: &JsonValue) -> Option<Vec<JsonValue>> {
+    if race["traitTags"].contains("NPC Race") {
+        println!("Warning: skipping race {}: npc race", race["name"]);
+        return None;
+    }
+
+    if !race["_copy"].is_null() {
+        println!(
+            "Warning: skipping race {}: _copy not supported",
+            race["name"]
+        );
+        return None;
+    }
+
+    let (ability_bonuses, ability_choices) = abilities::parse(race);
+    let add_suffix = ability_choices.len() > 1;
+
+    let res = ability_choices
+        .iter()
+        .enumerate()
+        .map(|(idx, ability_choice)| {
+            object! {
+                name: name::parse(race, idx, add_suffix),
+                speed: speed::parse(race),
+                ability_bonuses: ability_bonuses.clone(),
+                flex_ability_bonuses: ability_choice.clone(),
+                traits: traits::parse(&race["entries"]),
+            }
+        })
+        .collect::<Vec<JsonValue>>();
+
+    Some(res)
 }
 
 #[cfg(test)]
