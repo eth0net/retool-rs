@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use json::{object, JsonValue};
+use json::{array, object, JsonValue};
 
 use super::JsonConverter;
 
@@ -27,6 +27,8 @@ impl JsonConverter for RaceConverter {
 }
 
 fn map_races(race: &JsonValue) -> Option<Vec<JsonValue>> {
+    let mut race = race.clone();
+
     if race["traitTags"].contains("NPC Race") {
         println!("Warning: skipping race {}: npc race", race["name"]);
         return None;
@@ -40,24 +42,51 @@ fn map_races(race: &JsonValue) -> Option<Vec<JsonValue>> {
         return None;
     }
 
-    let (ability_bonuses, ability_choices) = abilities::parse(race);
-    let add_suffix = ability_choices.len() > 1;
+    apply_lineage(&mut race);
 
-    let res = ability_choices
+    let abilities = abilities::parse(&race["ability"]);
+    let add_suffix = abilities.len() > 1;
+
+    let abilities = abilities
         .iter()
         .enumerate()
-        .map(|(idx, ability_choice)| {
+        .map(|(idx, (bonuses, choices))| {
             object! {
-                name: name::parse(race, idx, add_suffix),
-                speed: speed::parse(race),
-                ability_bonuses: ability_bonuses.clone(),
-                flex_ability_bonuses: ability_choice.clone(),
+                name: name::parse(&race, idx, add_suffix),
+                speed: speed::parse(&race),
+                ability_bonuses: bonuses.clone(),
+                flex_ability_bonuses: choices.clone(),
                 traits: traits::parse(&race["entries"]),
             }
         })
-        .collect::<Vec<JsonValue>>();
+        .collect();
 
-    Some(res)
+    Some(abilities)
+}
+
+fn apply_lineage(race: &mut JsonValue) {
+    if race["lineage"] == "VRGR" || race["lineage"] == "UA1" {
+        race["entries"].push(object! {
+            type: "entries",
+            name: "Languages",
+            entries: ["You can speak, read, and write Common and one other language that you and your DM agree is appropriate for your character."],
+        }).unwrap();
+    }
+
+    match &race["lineage"] {
+        t if t == "VRGR" => {
+            race["ability"] = array![
+                { choose: { weighted: { weights: [2,1] }}},
+                { choose: { weighted: { weights: [1,1,1] }}},
+            ];
+        }
+        t if t == "UA1" => {
+            race["ability"] = array![
+                { choose: { weighted: { weights: [2,1] }}},
+            ];
+        }
+        _ => {}
+    }
 }
 
 #[cfg(test)]
