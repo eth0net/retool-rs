@@ -560,7 +560,7 @@ checksum = "a5996294f19bd3aae0453a862ad728f60e6600695733dd5df01da90c54363a3c"
 
 [[package]]
 name = "retool"
-version = "0.3.0-dev+races.3"
+version = "0.3.0-dev+races.4"
 dependencies = [
  "anyhow",
  "assert_fs",

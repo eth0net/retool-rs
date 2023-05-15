@@ -1,6 +1,6 @@
 [package]
 name = "retool"
-version = "0.3.0-dev+races.3"
+version = "0.3.0-dev+races.4"
 edition = "2021"
 description = "Convert 5e.tools data for use with Reroll"
 repository = "https://github.com/eth0net/retool-rs"
