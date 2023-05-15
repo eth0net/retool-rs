@@ -2,7 +2,7 @@ use json::{object, JsonValue};
 
 use crate::convert::entries;
 
-pub(crate) fn parse(traits: &JsonValue) -> JsonValue {
+pub(crate) fn for_race(traits: &JsonValue) -> JsonValue {
     let to_trait = |t: &JsonValue| {
         object! {
             name: t["name"].to_string(),
@@ -13,6 +13,18 @@ pub(crate) fn parse(traits: &JsonValue) -> JsonValue {
     traits
         .members()
         .map(to_trait)
+        .collect::<Vec<JsonValue>>()
+        .into()
+}
+
+pub(crate) fn for_subrace(race: &JsonValue, subrace: &JsonValue) -> JsonValue {
+    let race_traits = &race["traits"];
+    let subrace_traits = for_race(&subrace["entries"]);
+
+    race_traits
+        .members()
+        .chain(subrace_traits.members())
+        .cloned()
         .collect::<Vec<JsonValue>>()
         .into()
 }
@@ -94,7 +106,7 @@ mod tests {
         name: "Trait".to_string(),
         desc: "Caption 1\n+-------------+-------------+\n| Col 1       | Col 2       |\n+===========================+\n| Row 1 Col 1 | Row 1 Col 2 |\n|-------------+-------------|\n| Row 2 Col 1 | Row 2 Col 2 |\n+-------------+-------------+",
     } ; "mixed entries")]
-    fn test_parse(input: JsonValue, expected: JsonValue) {
-        assert_eq!(parse(&array![input]), array![expected]);
+    fn test_for_race(input: JsonValue, expected: JsonValue) {
+        assert_eq!(for_race(&array![input]), array![expected]);
     }
 }

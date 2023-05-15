@@ -17,11 +17,18 @@ impl JsonConverter for RaceConverter {
             bail!("expected race array in object: {{ \"race\": [] }}")
         };
 
-        let races = input["race"]
+        let mut races: Vec<JsonValue> = input["race"]
             .members()
             .filter_map(map_races)
             .flatten()
             .collect();
+
+        let mut subraces: Vec<JsonValue> = input["subrace"]
+            .members()
+            .flat_map(map_subraces(&races))
+            .collect();
+
+        races.append(&mut subraces);
 
         Ok(JsonValue::Array(races))
     }
@@ -43,7 +50,7 @@ fn map_races(race: &JsonValue) -> Option<Vec<JsonValue>> {
 
     let race = lineage::apply(race);
 
-    let abilities = abilities::parse(&race["ability"]);
+    let abilities = abilities::for_race(&race["ability"]);
     let add_suffix = abilities.len() > 1;
 
     let abilities = abilities
@@ -51,16 +58,48 @@ fn map_races(race: &JsonValue) -> Option<Vec<JsonValue>> {
         .enumerate()
         .map(|(idx, (bonuses, choices))| {
             object! {
-                name: name::parse(&race, idx, add_suffix),
-                speed: speed::parse(&race),
+                name: name::for_race(&race, idx, add_suffix),
+                speed: speed::for_race(&race),
                 ability_bonuses: bonuses.clone(),
                 flex_ability_bonuses: choices.clone(),
-                traits: traits::parse(&race["entries"]),
+                traits: traits::for_race(&race["entries"]),
             }
         })
         .collect();
 
     Some(abilities)
+}
+
+fn map_subraces<'a>(races: &'a [JsonValue]) -> impl Fn(&'a JsonValue) -> Vec<JsonValue> {
+    |subrace| {
+        races
+            .iter()
+            .filter(|race| {
+                let race_name = race["name"].to_string();
+                let name = subrace["raceName"].as_str();
+                let source = subrace["raceSource"].as_str();
+
+                if name.is_none() || source.is_none() {
+                    return false;
+                }
+
+                let suffix = format!("({})", source.unwrap());
+
+                race_name.starts_with(name.unwrap()) && race_name.ends_with(suffix.as_str())
+            })
+            .map(|race| {
+                let (bonuses, choices) = abilities::for_subrace(race, subrace);
+
+                object! {
+                    name: name::for_subrace(race, subrace),
+                    speed: speed::for_subrace(race, subrace),
+                    ability_bonuses: bonuses,
+                    flex_ability_bonuses: choices,
+                    traits: traits::for_subrace(race, subrace),
+                }
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]

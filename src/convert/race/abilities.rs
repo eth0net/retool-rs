@@ -2,8 +2,33 @@ use json::array;
 
 use json::JsonValue;
 
-pub(crate) fn parse(abilities: &JsonValue) -> Vec<(JsonValue, JsonValue)> {
+pub(crate) fn for_race(abilities: &JsonValue) -> Vec<(JsonValue, JsonValue)> {
     abilities.members().map(map_ability).collect()
+}
+
+pub(crate) fn for_subrace(race: &JsonValue, subrace: &JsonValue) -> (JsonValue, JsonValue) {
+    let mut bonuses = race["ability_bonuses"].clone();
+    let mut choices = race["flex_ability_bonuses"].clone();
+
+    if subrace["ability"][0].is_object() {
+        let (subrace_bonuses, subrace_choices) = map_ability(&subrace["ability"][0]);
+
+        subrace_bonuses
+            .members()
+            .enumerate()
+            .for_each(|(idx, bonus)| {
+                let race_bonus = bonuses[idx].as_u8().unwrap();
+                let subrace_bonus = bonus.as_u8().unwrap();
+                let bonus = race_bonus + subrace_bonus;
+                bonuses[idx] = bonus.into();
+            });
+
+        if !subrace_choices.is_null() {
+            choices = subrace_choices;
+        }
+    }
+
+    (bonuses, choices)
 }
 
 fn map_ability(ability: &JsonValue) -> (JsonValue, JsonValue) {
@@ -97,7 +122,7 @@ mod tests {
         vec![(array![0,0,0,0,0,0], array![2,1])]
         ; "lineage UA1"
     )]
-    fn test_parse(input: JsonValue, expected: Vec<(JsonValue, JsonValue)>) {
-        assert_eq!(parse(&input), expected);
+    fn test_for_race(input: JsonValue, expected: Vec<(JsonValue, JsonValue)>) {
+        assert_eq!(for_race(&input), expected);
     }
 }
